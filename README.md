@@ -3,6 +3,8 @@
 Statische Web-App, die allCLEAR-Textdateien wieder als Diagramme darstellt und neue Diagramme im selben Format erstellt.
 Sie kommt ohne Server-Logik, Build-Schritt oder externe Bibliotheken aus.
 
+**Direkt nutzen:** https://alexanderschirmer.github.io/allclear-web/
+
 ## Bereitstellung
 
 Diese Dateien auf einen beliebigen statischen Webserver kopieren:
