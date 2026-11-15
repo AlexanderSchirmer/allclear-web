@@ -96,7 +96,8 @@
 
   var ROLE_KIND = {
     process: 'rect', tree: 'rect', fbCause: 'rect', fbEffect: 'rect', start: 'manualInput', stop: 'manualInput',
-    choice: 'trapezoid', 'if': 'diamond', 'case': 'hexagon', loop: 'ellipse', assistant: 'ellipse', desc: 'desc', fbLabel: 'none'
+    choice: 'trapezoid', 'if': 'diamond', 'case': 'hexagon', loop: 'ellipse', assistant: 'ellipse', desc: 'desc', fbLabel: 'none',
+    conn: 'ellipse'
   };
 
   function r4(n) { return String(Math.round(n * 10000) / 10000); }
@@ -114,7 +115,7 @@
     return NAMES[s] || null;
   };
 
-  AC.shapeKind = function (b) { return (b.role !== 'fbLabel' && b.role !== 'desc' && b.shape) || ROLE_KIND[b.role] || 'rect'; };
+  AC.shapeKind = function (b) { return (b.role !== 'fbLabel' && b.role !== 'desc' && b.role !== 'conn' && b.shape) || ROLE_KIND[b.role] || 'rect'; };
   AC.shapeDef = function (b) { return K[AC.shapeKind(b)] || K.rect; };
   AC.shapePoints = function (b) {
     var d = AC.shapeDef(b);

@@ -79,7 +79,9 @@
       <tr><td><code>[FLOW]</code> / <code>[TREE]</code></td><td>vor der Startbox</td><td>Erzwingt Ablauf- bzw. Baumdarstellung</td></tr>
       <tr><td><code>[FISHBONE]</code></td><td>vor der Wirkung</td><td>Ursache-Wirkung-Diagramm; erste Box endet mit <code>\</code></td></tr>
       <tr><td><code>[LOOP]</code> … <code>[UNTIL]</code></td><td>vor dem Schleifenkopf / danach</td><td>Schleife mit Rücksprung zum Kopf</td></tr>
-      <tr><td><code>[GOTO=Ziel, Text; Ziel2, Text2]</code></td><td>nach der Box</td><td>Sprunglinie(n) mit Linientext</td></tr>
+      <tr><td><code>[GOTO=Ziel, Text; Ziel2, Text2]</code></td><td>nach der Box</td><td>Sprunglinie(n) mit Linientext. Die Linie läuft direkt neben dem Bereich,
+        der Quelle und Ziel enthält, auf der Seite mit den wenigsten Kreuzungen; Kreuzungen werden als Brücke gezeichnet.
+        Sprünge in einen anderen Ablauf (<code>[HEAD]</code>) erscheinen als Sprungmarken S1, S2 …</td></tr>
       <tr><td><code>[LABEL=Ziel]</code></td><td>vor der Box</td><td>Sprungziel</td></tr>
       <tr><td><code>[GOTOLOGIC]</code></td><td>nach dem Titel</td><td>Boxen mit GOTO erhalten keine automatische Linie</td></tr>
       <tr><td><code>[LINKTO=Name:Ebene]</code></td><td>nach der Box</td><td>Sprungsymbol zu <code>[LINK=Name]</code> (anklickbar)</td></tr>
@@ -113,6 +115,7 @@
     <ul>
       <li>Dateien per Drag &amp; Drop auf das Fenster ziehen oder über „Öffnen…“ laden (UTF-8 und ANSI werden erkannt).</li>
       <li>Klick auf eine Box springt zur Zeile im Editor; der Cursor im Editor markiert die Box im Diagramm.</li>
+      <li>Klick auf eine Sprungmarke (S1, S2 …) springt zur Gegenmarke.</li>
       <li>Strg + Mausrad zoomt das Diagramm.</li>
       <li>„Export .drawio.svg“ erzeugt ein SVG, das draw.io direkt als bearbeitbares Diagramm öffnet.</li>
     </ul>

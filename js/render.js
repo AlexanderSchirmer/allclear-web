@@ -81,8 +81,24 @@
     var bx = p2.x - ux * s, by = p2.y - uy * s;
     return '<path d="M' + F(p2.x) + ' ' + F(p2.y) + ' L' + F(bx - uy * hw) + ' ' + F(by + ux * hw) + ' L' + F(bx + uy * hw) + ' ' + F(by - ux * hw) + ' Z" fill="#000000" stroke="#000000"/>';
   }
-  function pathSvg(pts, arrow, cls) {
-    var d = 'M' + pts.map(function (p) { return F(p.x) + ' ' + F(p.y); }).join(' L');
+  /* Pfad mit Brücken: an Kreuzungen springt die waagerechte Linie in einem Bogen über die senkrechte */
+  function pathD(pts, hops) {
+    var d = 'M' + F(pts[0].x) + ' ' + F(pts[0].y), r = 5;
+    for (var i = 1; i < pts.length; i++) {
+      var p = pts[i - 1], q = pts[i];
+      var hs = (hops || []).filter(function (h) { return h.seg === i - 1; });
+      if (hs.length && Math.abs(p.y - q.y) < 0.5) {
+        var dir = q.x > p.x ? 1 : -1;
+        hs.sort(function (a, b) { return (a.x - b.x) * dir; }).forEach(function (h) {
+          d += ' L' + F(h.x - dir * r) + ' ' + F(p.y) + ' A' + r + ' ' + r + ' 0 0 ' + (dir > 0 ? 1 : 0) + ' ' + F(h.x + dir * r) + ' ' + F(p.y);
+        });
+      }
+      d += ' L' + F(q.x) + ' ' + F(q.y);
+    }
+    return d;
+  }
+  function pathSvg(pts, arrow, cls, hops) {
+    var d = pathD(pts, hops);
     var s = '<path' + (cls ? ' class="' + cls + '"' : '') + ' d="' + d + '" fill="none" stroke="#000000"/>';
     if (arrow && pts.length > 1) s += arrowHead(pts[pts.length - 2], pts[pts.length - 1]);
     return s;
@@ -101,9 +117,10 @@
     o.push('<rect x="-0.5" y="-0.5" width="' + W + '" height="' + H + '" fill="#ffffff"/>');
     o.push('<g font-family="' + FONT + '" stroke-width="1">');
     L.lines.forEach(function (l) { o.push(pathSvg(l.pts, l.arrow)); });
-    L.edges.forEach(function (e) { o.push(pathSvg(e.pts, e.arrow !== false, e.kind === 'goto' ? 'ac-goto' : null)); });
+    L.edges.forEach(function (e) { o.push(pathSvg(e.pts, e.arrow !== false, e.kind === 'goto' ? 'ac-goto' : null, e.hops)); });
     L.boxes.forEach(function (b) {
-      o.push('<g class="ac-box" data-id="' + b.id + '" data-line="' + (b.line || '') + '">' + shapeSvg(b) + textSvg(b) + '</g>');
+      o.push('<g class="ac-box' + (b.conn ? ' ac-conn' : '') + '" data-id="' + b.id + '" data-line="' + (b.line || '') + '"' +
+        (b.conn ? ' data-conn="' + esc(b.conn) + '"' : '') + '>' + shapeSvg(b) + textSvg(b) + '</g>');
     });
     L.edges.forEach(function (e) { (e.labels || []).forEach(function (l) { o.push(labelSvg(l)); }); });
     L.texts.forEach(function (t) { o.push(labelSvg(t)); });
@@ -169,7 +186,8 @@
   function edgeXml(id, e, arrow) {
     var p = e.pts, s = e.from, t = e.to, p0 = p[0], pn = p[p.length - 1];
     var st = 'edgeStyle=none;rounded=0;html=1;strokeColor=#000000;fontColor=#000000;' +
-      (arrow ? 'endArrow=block;endFill=1;endSize=6;' : 'endArrow=none;');
+      (arrow ? 'endArrow=block;endFill=1;endSize=6;' : 'endArrow=none;') +
+      (e.kind === 'goto' ? 'jumpStyle=arc;jumpSize=10;' : '');
     if (s) st += 'exitX=' + r4((p0.x - s.x) / s.w) + ';exitY=' + r4((p0.y - s.y) / s.h) + ';exitDx=0;exitDy=0;exitPerimeter=0;';
     if (t) st += 'entryX=' + r4((pn.x - t.x) / t.w) + ';entryY=' + r4((pn.y - t.y) / t.h) + ';entryDx=0;entryDy=0;entryPerimeter=0;';
     var xml = '<mxCell id="' + id + '" value="" style="' + st + '" edge="1" parent="1"' + (s ? ' source="' + s.id + '"' : '') + (t ? ' target="' + t.id + '"' : '') + '>' +

@@ -30,6 +30,9 @@ python -m http.server 8765
 - Live-Editor mit Syntax-Hervorhebung, Zeilennummern, Tab/Umschalt+Tab-Einrückung und automatischer Einrückung nach `?`, `:`, `\`
 - Öffnen über Dateidialog oder Drag & Drop; UTF-8 und ANSI (Windows-1252) werden erkannt und beim Speichern beibehalten
 - Anzeige als SVG; Klick auf eine Box springt zur Zeile, der Cursor im Editor markiert die Box
+- Sprunglinien (`[GOTO]`) laufen auf einer eigenen Spur direkt neben dem Bereich, der Quelle und Ziel enthält, auf der Seite
+  mit den wenigsten Kreuzungen; unvermeidbare Kreuzungen werden als Brücke gezeichnet (auch in draw.io).
+  Sprünge in einen anderen Ablauf (`[HEAD]`) erscheinen als anklickbares Sprungmarken-Paar S1, S2 …
 - Vollbild-Ansicht für das Diagramm, Zoom per Strg+Mausrad oder Zwei-Finger-Geste
 - Für Smartphones optimiert: kompakte Leiste mit Menü (☰), Editor und Diagramm untereinander
 - Export als `.drawio.svg`: ein normales SVG mit eingebettetem draw.io-Modell (alle Ebenen als Seiten), in draw.io voll bearbeitbar

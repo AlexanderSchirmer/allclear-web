@@ -142,7 +142,7 @@
 
   /* ---------- Blöcke ---------- */
   function newBlock() {
-    return { w: 0, h: 0, ax: 0, boxes: [], edges: [], lines: [], texts: [], pend: [], entry: null };
+    return { w: 0, h: 0, ax: 0, boxes: [], edges: [], lines: [], texts: [], pend: [], ghosts: [], entry: null };
   }
   function shift(b, dx, dy) {
     if (!dx && !dy) return;
@@ -152,10 +152,12 @@
     b.edges.forEach(function (e) { e.pts.forEach(sp); (e.labels || []).forEach(sp); });
     b.lines.forEach(function (l) { l.pts.forEach(sp); });
     b.texts.forEach(sp);
+    b.ghosts.forEach(sp);
     b.pend.forEach(function (p) { p.pts.forEach(sp); (p.labels || []).forEach(sp); });
   }
   function absorb(dst, src) {
-    ['boxes', 'edges', 'lines', 'texts'].forEach(function (k) { Array.prototype.push.apply(dst[k], src[k]); });
+    ['boxes', 'edges', 'lines', 'texts', 'ghosts'].forEach(function (k) { Array.prototype.push.apply(dst[k], src[k]); });
+    src.parent = dst;
   }
   function labelBox(l) {
     var x = l.align === 'left' ? l.x : l.align === 'right' ? l.x - l.w : l.x - l.w / 2;
@@ -169,6 +171,7 @@
     b.edges.forEach(function (e) { e.pts.forEach(function (p) { add(p.x, p.y); }); (e.labels || []).forEach(addL); });
     b.lines.forEach(function (l) { l.pts.forEach(function (p) { add(p.x, p.y); }); });
     b.texts.forEach(addL);
+    b.ghosts.forEach(function (g) { add(g.x, g.y); });
     b.pend.forEach(function (p) { p.pts.forEach(function (q) { add(q.x, q.y); }); (p.labels || []).forEach(addL); });
     if (x0 === Infinity) return { x0: 0, y0: 0, x1: 0, y1: 0 };
     return { x0: x0, y0: y0, x1: x1, y1: y1 };
@@ -198,13 +201,31 @@
     return out;
   }
 
-  /* Einzelne Box (plus evtl. Beschreibung) */
-  function boxBlock(box, ctx, withPend) {
+  /* Anschlusshöhe für Sprunglinien: bei Entscheidungen und Schleifenköpfen abseits der Zweiglinien */
+  function attachY(b, side, entry) {
+    var f = 0.5;
+    if (b.role === 'if') f = entry ? 0.15 : 0.8;
+    else if (b.role === 'loop' && side === 'right') f = entry ? 0.75 : 0.88;
+    return b.y + b.h * f;
+  }
+
+  /* Sprungmarke (Konnektor) für Sprünge zwischen Abläufen */
+  var connSeq = 0;
+  function mkConn(name, line) {
+    var w = Math.max(26, Math.round(measure(name, FS) + 12));
+    return { id: 'k' + (++connSeq), role: 'conn', conn: name, areas: [name], disp: [name], lines: [[name]], w: w, h: 26, tw: measure(name, FS), line: line, num: 0 };
+  }
+
+  /* Einzelne Box (plus evtl. Beschreibung und Sprungmarken) */
+  function boxBlock(box, ctx, withPend, noReserve) {
     var b = newBlock();
     box.x = 0; box.y = 0;
+    box.blk = b;
+    b.node = box;
     b.boxes.push(box);
     b.entry = box;
     b.ax = box.w / 2;
+    var right = box.w;
     if (box.description) {
       var d = { id: box.id + 'd', role: 'desc', areas: [box.description], line: box.line, num: 0 };
       sizeBox(d, ctx.opts);
@@ -213,12 +234,72 @@
       b.boxes.push(d);
       var y = box.h / 2;
       b.edges.push({ from: d, to: box, pts: [{ x: d.x, y: y }, { x: rightAt(box, y), y: y }], labels: [] });
+      right = d.x + d.w;
+    }
+    var cn = ctx.conns && ctx.conns.get(box);
+    if (cn) {
+      if (cn.inName) {
+        var iy = attachY(box, 'left', true);
+        var mi = mkConn(cn.inName, box.line);
+        mi.x = -mi.w - 22; mi.y = iy - mi.h / 2;
+        b.boxes.push(mi);
+        b.edges.push({ from: mi, to: box, pts: [{ x: mi.x + mi.w, y: iy }, { x: leftAt(box, iy), y: iy }], labels: [] });
+      }
+      cn.out.forEach(function (o, i) {
+        var oy = attachY(box, 'right', false) + i * 32;
+        var mo = mkConn(o.name, box.line);
+        mo.x = right + 22; mo.y = oy - mo.h / 2;
+        b.boxes.push(mo);
+        b.edges.push({ from: box, to: mo, kind: 'goto', pts: [{ x: right === box.w ? rightAt(box, oy) : right, y: oy }, { x: mo.x, y: oy }],
+          labels: o.text ? [mkLabel(o.text, mo.x + mo.w + 4, oy, 'left')] : [] });
+      });
     }
     if (withPend && !box.stop && !(ctx.gotologic && box.gotos && box.gotos.length)) {
       b.pend.push({ from: box, pts: [{ x: box.w / 2, y: box.h }], labels: [] });
     }
     b.h = box.h;
+    if (!noReserve) reserveLanes(b, ctx);
     return finalize(b);
+  }
+
+  /* Platz für Sprung-Spuren neben einem Block reservieren (zweiter Layout-Durchgang) */
+  function bboxList(blocks) {
+    var r = null;
+    blocks.forEach(function (k) {
+      var q = bbox(k);
+      r = r ? { x0: Math.min(r.x0, q.x0), y0: Math.min(r.y0, q.y0), x1: Math.max(r.x1, q.x1), y1: Math.max(r.y1, q.y1) } : q;
+    });
+    return r || { x0: 0, y0: 0, x1: 0, y1: 0 };
+  }
+  function laneRange(b, e) {
+    if (e.seq && b.kids) return bboxList(b.kids.slice(Math.min(e.i0, e.i1), Math.max(e.i0, e.i1) + 1));
+    return bbox(b);
+  }
+  function reserveLanes(b, ctx) {
+    var list = ctx.res && ctx.res.get(b.node);
+    if (!list) return;
+    var last = { left: null, right: null };
+    list.forEach(function (e) {
+      var r = laneRange(b, e), lane;
+      if (e.side === 'right') {
+        lane = r.x1 + 16;
+        e.gotos.forEach(function (gg) {
+          if (gg.labelW && gg.src.blk) lane = Math.max(lane, rightAt(gg.src, attachY(gg.src, 'right', false)) + gg.labelW + 14);
+        });
+        if (last.right !== null) lane = Math.max(lane, last.right + 14);
+        last.right = lane;
+      } else {
+        lane = r.x0 - 16;
+        e.gotos.forEach(function (gg) {
+          if (gg.labelW && gg.src.blk) lane = Math.min(lane, leftAt(gg.src, attachY(gg.src, 'left', false)) - gg.labelW - 14);
+        });
+        if (last.left !== null) lane = Math.min(lane, last.left - 14);
+        last.left = lane;
+      }
+      var gp = { x: lane, y: (r.y0 + r.y1) / 2 };
+      b.ghosts.push(gp, { x: lane + (e.side === 'right' ? 6 : -6), y: gp.y });
+      ctx.lanePts.set(e, gp);
+    });
   }
 
   /* Offene Linien (pend) mit der Eingangsbox des nächsten Blocks verbinden */
@@ -265,6 +346,9 @@
     b.pend = pend || [];
     b.entry = blocks[0].entry;
     b.h = y;
+    b.kids = blocks;
+    b.node = nodes;
+    reserveLanes(b, ctx);
     return finalize(b);
   }
 
@@ -350,6 +434,8 @@
     }
     b.entry = head;
     b.ax = head.x + head.w / 2;
+    b.node = n;
+    reserveLanes(b, ctx);
     return finalize(b);
   }
 
@@ -387,16 +473,18 @@
     });
     b.pend = [{ from: head, pts: [{ x: head.w / 2, y: head.h }], labels: [] }];
     b.h = bottom + 16;
+    b.node = n;
+    reserveLanes(b, ctx);
     return finalize(b);
   }
 
   /* Baum / Organigramm */
   function layoutTree(node, ctx, depth) {
     var box = node.box;
-    var b = boxBlock(box, ctx, false);
+    var b = boxBlock(box, ctx, false, true);
     var kids = node.children.map(function (c) { return layoutTree(c, ctx, depth + 1); });
     var assts = node.assistants.map(function (c) { return layoutTree(c, ctx, depth + 1); });
-    if (!kids.length && !assts.length) { b.leaf = true; return b; }
+    if (!kids.length && !assts.length) { b.leaf = true; reserveLanes(b, ctx); return finalize(b); }
     var tx = box.w / 2;
     var y = box.h + 16;
     for (var i = 0; i < assts.length; i += 2) {
@@ -412,7 +500,7 @@
       });
       y += rowH + 14;
     }
-    if (!kids.length) return finalize(b);
+    if (!kids.length) { reserveLanes(b, ctx); return finalize(b); }
     var allLeaves = kids.every(function (k) { return k.leaf; });
     if (depth > 0 && allLeaves && kids.length > 1 && !assts.length) {
       var railX = Math.min(14, box.w / 4);
@@ -455,6 +543,7 @@
     }
     b.entry = box;
     b.ax = box.x + box.w / 2;
+    reserveLanes(b, ctx);
     return finalize(b);
   }
 
@@ -534,17 +623,101 @@
   }
 
   /* ---------- Sprünge (GOTO) ---------- */
-  function routeGoto(blk, src, tgt, g, laneX) {
-    var sy = src.y + src.h / 2, ty = tgt.y + tgt.h / 2;
-    var sx = rightAt(src, sy), tx = rightAt(tgt, ty);
-    var lbl = g.text ? mkLabel(g.text, sx + 6, sy - 8, 'left') : null;
-    if (lbl) laneX = Math.max(laneX, sx + lbl.w + 16);
-    var pts;
-    if (src === tgt) pts = [{ x: sx, y: sy - 6 }, { x: laneX, y: sy - 6 }, { x: laneX, y: sy + 6 }, { x: sx, y: sy + 6 }];
-    else pts = [{ x: sx, y: sy }, { x: laneX, y: sy }, { x: laneX, y: ty }, { x: tx, y: ty }];
+  function ancestors(blk) { var a = []; while (blk) { a.push(blk); blk = blk.parent; } return a; }
+
+  /* Kosten einer Seite: waagerechte Strecken von Quelle bzw. Ziel bis zur Spur – Boxen zählen viel, Linien wenig */
+  function sideCost(L, bb, src, t, side) {
+    var c = 0;
+    [[src, false], [t, true]].forEach(function (pr) {
+      var bx = pr[0], y = attachY(bx, side, pr[1]);
+      var x0 = side === 'right' ? rightAt(bx, y) : bb.x0 - 16;
+      var x1 = side === 'right' ? bb.x1 + 16 : leftAt(bx, y);
+      L.boxes.forEach(function (o) {
+        if (o !== bx && o.y < y && o.y + o.h > y && o.x < x1 && o.x + o.w > x0) c += 10;
+      });
+      L.edges.forEach(function (e) {
+        for (var i = 1; i < e.pts.length; i++) {
+          var p = e.pts[i - 1], q = e.pts[i];
+          if (Math.abs(p.x - q.x) < 0.5 && p.x > x0 && p.x < x1 && y > Math.min(p.y, q.y) && y < Math.max(p.y, q.y)) c += 1;
+        }
+      });
+    });
+    return c;
+  }
+
+  /* Erster Durchgang: für jeden Sprung den kleinsten gemeinsamen Block und die Seite bestimmen */
+  function analyzeGotos(layer, ctx, labelMap, warn) {
+    var res = new Map(), conns = new Map(), connNames = new Map(), nConn = 0;
+    function conn(b) { var c = conns.get(b); if (!c) { c = { inName: null, out: [] }; conns.set(b, c); } return c; }
+    layer.boxes.forEach(function (src) {
+      (src.gotos || []).forEach(function (g) {
+        var t = labelMap.get(AC.normName(g.label));
+        if (!t) { warn(src.line, 'Sprungziel [LABEL=' + g.label + '] wurde nicht gefunden.'); return; }
+        if (!src.blk || !t.blk) { warn(src.line, 'Sprünge in Fishbone-Diagrammen werden nicht gezeichnet.'); return; }
+        var A = ancestors(src.blk), T = ancestors(t.blk), L = null;
+        for (var i = 0; i < T.length && !L; i++) if (A.indexOf(T[i]) >= 0) L = T[i];
+        if (!L) {
+          /* verschiedene Abläufe: Sprungmarke statt Linie */
+          var name = connNames.get(t);
+          if (!name) { name = 'S' + (++nConn); connNames.set(t, name); conn(t).inName = name; }
+          conn(src).out.push({ name: name, text: g.text });
+          return;
+        }
+        var isSeq = Array.isArray(L.node) && !!L.kids, i0 = null, i1 = null;
+        if (isSeq) { i0 = L.kids.indexOf(A[A.indexOf(L) - 1]); i1 = L.kids.indexOf(T[T.indexOf(L) - 1]); }
+        var bb = isSeq ? bboxList(L.kids.slice(Math.min(i0, i1), Math.max(i0, i1) + 1)) : bbox(L);
+        var cl = sideCost(L, bb, src, t, 'left'), cr = sideCost(L, bb, src, t, 'right'), side;
+        if (cl !== cr) side = cl < cr ? 'left' : 'right';
+        else side = (src.x + src.w / 2 < (bb.x0 + bb.x1) / 2 - 2) ? 'left' : 'right';
+        var list = res.get(L.node);
+        if (!list) { list = []; res.set(L.node, list); }
+        var e = list.find(function (x) { return x.side === side && x.key === t.id; });
+        if (!e) { e = { side: side, key: t.id, seq: isSeq, i0: i0, i1: i1, gotos: [] }; list.push(e); }
+        else if (isSeq) { var lo = Math.min(e.i0, e.i1, i0, i1), hi = Math.max(e.i0, e.i1, i0, i1); e.i0 = lo; e.i1 = hi; }
+        e.gotos.push({ src: src, t: t, g: g, labelW: g.text ? measure(g.text, LBL) + 2 : 0 });
+      });
+    });
+    ctx.res = res;
+    ctx.conns = conns;
+    ctx.lanePts = new Map();
+  }
+
+  function routeLane(blk, gg, side, lane) {
+    var src = gg.src, t = gg.t, self = src === t;
+    var sy = self ? src.y + src.h * 0.35 : attachY(src, side, false);
+    var ty = self ? t.y + t.h * 0.7 : attachY(t, side, true);
+    var sx = side === 'right' ? rightAt(src, sy) : leftAt(src, sy);
+    var tx = side === 'right' ? rightAt(t, ty) : leftAt(t, ty);
+    var lbl = gg.g.text ? mkLabel(gg.g.text, side === 'right' ? sx + 6 : sx - 6, sy - 8, side === 'right' ? 'left' : 'right') : null;
     blk.edges.push({
-      from: src, to: tgt, pts: simplify(pts), kind: 'goto',
-      labels: lbl ? [lbl] : []
+      from: src, to: t, kind: 'goto', labels: lbl ? [lbl] : [],
+      pts: simplify([{ x: sx, y: sy }, { x: lane, y: sy }, { x: lane, y: ty }, { x: tx, y: ty }])
+    });
+  }
+
+  /* Brücken: wo eine waagerechte Sprunglinie eine senkrechte Linie kreuzt, springt sie darüber */
+  function addHops(all) {
+    var vert = [];
+    function collect(owner, pts) {
+      for (var i = 1; i < pts.length; i++) {
+        var p = pts[i - 1], q = pts[i];
+        if (Math.abs(p.x - q.x) < 0.5 && Math.abs(p.y - q.y) > 0.5) vert.push({ owner: owner, x: p.x, y0: Math.min(p.y, q.y), y1: Math.max(p.y, q.y) });
+      }
+    }
+    all.edges.forEach(function (e) { collect(e, e.pts); });
+    all.lines.forEach(function (l) { collect(l, l.pts); });
+    all.edges.forEach(function (e) {
+      if (e.kind !== 'goto') return;
+      var hops = [];
+      for (var i = 1; i < e.pts.length; i++) {
+        var p = e.pts[i - 1], q = e.pts[i];
+        if (Math.abs(p.y - q.y) > 0.5) continue;
+        var lo = Math.min(p.x, q.x) + 7, hi = Math.max(p.x, q.x) - 7;
+        vert.forEach(function (v) {
+          if (v.owner !== e && v.x > lo && v.x < hi && p.y > v.y0 + 2 && p.y < v.y1 - 2) hops.push({ seg: i - 1, x: v.x });
+        });
+      }
+      e.hops = hops;
     });
   }
 
@@ -552,45 +725,46 @@
   function layoutLayer(doc, layer, opts, warn) {
     var ctx = { opts: opts, gotologic: doc.gotologic };
     layer.boxes.forEach(function (bx) { sizeBox(bx, opts); });
-    var blocks = [];
-    layer.roots.forEach(function (r) {
-      if (r.mode === 'flow') {
-        var bk = layoutSeq(r.nodes || [], ctx);
-        if (!bk.emptySeq && !bk.emptyBranch) blocks.push(bk);
-      } else {
-        (r.trees || []).forEach(function (t) {
-          blocks.push(r.mode === 'fishbone' ? layoutFishbone(t, ctx) : layoutTree(t, ctx, 0));
-        });
-      }
-    });
+    function layoutRoots() {
+      var blocks = [];
+      layer.roots.forEach(function (r) {
+        if (r.mode === 'flow') {
+          var bk = layoutSeq(r.nodes || [], ctx);
+          if (!bk.emptySeq && !bk.emptyBranch) blocks.push(bk);
+        } else {
+          (r.trees || []).forEach(function (t) {
+            blocks.push(r.mode === 'fishbone' ? layoutFishbone(t, ctx) : layoutTree(t, ctx, 0));
+          });
+        }
+      });
+      return blocks;
+    }
 
     var labelMap = new Map();
     layer.boxes.forEach(function (bx) {
+      bx.blk = null;
       if (!bx.label) return;
       var key = AC.normName(bx.label);
       if (labelMap.has(key)) warn(bx.line, 'Sprungmarke [LABEL=' + bx.label + '] ist mehrfach vergeben.');
       else labelMap.set(key, bx);
     });
-    var cross = [];
-    blocks.forEach(function (bk) {
-      var set = new Set(bk.boxes);
-      var bb = bbox(bk), lane = 0;
-      bk.boxes.forEach(function (src) {
-        (src.gotos || []).forEach(function (g) {
-          var tgt = labelMap.get(AC.normName(g.label));
-          if (!tgt) { warn(src.line, 'Sprungziel [LABEL=' + g.label + '] wurde nicht gefunden.'); return; }
-          if (set.has(tgt)) routeGoto(bk, src, tgt, g, bb.x1 + 20 + 14 * lane++);
-          else cross.push({ src: src, tgt: tgt, g: g });
-        });
-      });
-      finalize(bk);
-    });
+    var hasGoto = layer.boxes.some(function (bx) { return bx.gotos && bx.gotos.length; });
+    var blocks = layoutRoots();
+    if (hasGoto) {
+      /* 1. Durchgang ergibt Lage und gemeinsame Blöcke, im 2. Durchgang wird Platz für die Spuren reserviert */
+      analyzeGotos(layer, ctx, labelMap, warn);
+      blocks = layoutRoots();
+    }
 
     var all = newBlock(), x = 0;
     blocks.forEach(function (bk) { shift(bk, x, 0); absorb(all, bk); x += bk.w + 60; });
-    if (cross.length) {
-      var ab = bbox(all);
-      cross.forEach(function (c, i) { routeGoto(all, c.src, c.tgt, c.g, ab.x1 + 20 + 14 * i); });
+    if (hasGoto) {
+      ctx.res.forEach(function (list) {
+        list.forEach(function (e) {
+          var gp = ctx.lanePts.get(e);
+          if (gp) e.gotos.forEach(function (gg) { routeLane(all, gg, e.side, gp.x); });
+        });
+      });
     }
 
     var placed = all.boxes.filter(function (bx) { return bx.role !== 'desc'; });
@@ -638,6 +812,7 @@
     all.boxes.forEach(rp);
     all.edges.forEach(function (e) { e.pts.forEach(rp); });
     all.lines.forEach(function (l) { l.pts.forEach(rp); });
+    addHops(all);
 
     return {
       ref: layer.ref, name: layer.name, w: Math.ceil(W), h: Math.ceil(contentH + tH + 2 * M),

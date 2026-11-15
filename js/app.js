@@ -339,6 +339,18 @@
       return;
     }
     var box = e.target.closest('.ac-box');
+    if (box && box.dataset.conn) {
+      /* Sprungmarke: zur Gegenmarke mit gleichem Namen springen */
+      var marks = Array.prototype.slice.call($('svgHost').querySelectorAll('.ac-conn')).filter(function (g) { return g.dataset.conn === box.dataset.conn; });
+      var other = marks.filter(function (g) { return g !== box; });
+      var target = other.length ? other[(other.indexOf(box) + 1) % other.length] : null;
+      if (target) {
+        $('svgHost').querySelectorAll('.ac-box.sel').forEach(function (x) { x.classList.remove('sel'); });
+        target.classList.add('sel');
+        target.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' });
+      }
+      return;
+    }
     if (box && box.dataset.line) { editor.revealLine(+box.dataset.line); highlightLine(+box.dataset.line); }
   });
   $('canvas').addEventListener('wheel', function (e) {
