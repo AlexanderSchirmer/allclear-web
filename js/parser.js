@@ -112,7 +112,8 @@
 
     /* ---------- Einträge mit Einrückungsebenen ---------- */
     /* Eine Box endet mit einem Satzzeichen (. ? : \ ;). Zeilen ohne Satzzeichen am Ende werden mit
-       der nächsten Zeile zu einer Box verbunden – außer unter [BYLINE], dort ist jede Zeile eine Box. */
+       der nächsten Zeile zu einer Box verbunden, der Zeilenumbruch bleibt im Kasten erhalten –
+       außer unter [BYLINE], dort ist jede Zeile eine eigene Box. */
     var TERM = /[.?:\\;]$/;
     var entries = [], stack = [], byline = false, pend = null;
     function flush() {
@@ -126,7 +127,7 @@
       if (L.skip) continue;
       if (pend && !/^[\[(!&]/.test(L.body)) {
         if (L.col !== pend.col) warn(L.no, 'Zeile ' + pend.no + ' endet ohne Satzzeichen – diese Zeile wird an dieselbe Box angehängt.');
-        pend.text += ' ' + L.body;
+        pend.text += '\n' + L.body;
         if (TERM.test(L.body)) flush();
         continue;
       }

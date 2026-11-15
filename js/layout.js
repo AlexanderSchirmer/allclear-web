@@ -107,7 +107,14 @@
     var d = AC.shapeDef(box);
     var ww = (d.fit && FIT_WRAP[d.fit]) || WRAP[box.role] || 120;
     box.disp = box.areas.map(function (a) { return displayText(a, opts); });
-    box.lines = box.disp.map(function (a) { return wrap(a, ww, FS); });
+    box.lines = box.disp.map(function (a) {
+      /* Bewusst umbrochener Text (mehrzeilige Box): Kasten wächst mit den Zeilen bis 260 px mit */
+      var aw = ww;
+      if (a.indexOf('\n') >= 0) {
+        a.split('\n').forEach(function (p) { aw = Math.max(aw, Math.min(260, measure(p.trim(), FS))); });
+      }
+      return wrap(a, aw, FS);
+    });
     var all = [].concat.apply([], box.lines);
     var tw = Math.max.apply(null, [1].concat(all.map(function (l) { return measure(l, FS); })));
     var nl = box.lines.reduce(function (s, a) { return s + Math.max(1, a.length); }, 0);

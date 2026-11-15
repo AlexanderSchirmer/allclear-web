@@ -49,6 +49,7 @@ Die allCLEAR-Dokumentation lässt einige Punkte offen. allClear Web verhält sic
 
 - Eine Box endet mit einem Satzzeichen am Zeilenende (`.` `?` `:` `\` `;`). Zeilen ohne Satzzeichen werden mit der
   nächsten Zeile zu einer Box verbunden, so lässt sich der Text einer Box auf mehrere Zeilen schreiben.
+  Der Zeilenumbruch bleibt im Kasten erhalten (zu lange Zeilen werden zusätzlich automatisch umbrochen).
   Unter `[BYLINE]` ist dagegen jede Zeile eine eigene Box.
 - Einrückung mit Tabs oder Leerzeichen; die Ebenen ergeben sich aus der Einrückungstiefe.
 - Ebenen: allCLEAR speicherte Ebenen nicht im Textformat. Hier beginnt `[LAYER=Nr, Name]` eine neue Ebene (Erweiterung).
