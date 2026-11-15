@@ -50,6 +50,7 @@
     drawTabs();
     drawDiagram();
     showProblems(doc.warnings);
+    updatePrintArea();
     persist();
   }
 
@@ -219,12 +220,13 @@
   }
 
   /* ---------- Druck (A4, auf eine Seite pro Ebene skaliert) ---------- */
-  function printA4() {
+  /* Der Druckbereich wird nach jedem Zeichnen aktualisiert. So enthält er auch dann das Diagramm,
+     wenn über das Browser-Menü gedruckt wird oder window.print() sofort zurückkehrt (iOS). */
+  function updatePrintArea() {
     var pa = $('printArea');
     pa.innerHTML = '';
     var PX2MM = 25.4 / 96;
     var layouts = state.layouts.filter(function (L) { return L.boxes.length; });
-    if (!layouts.length) { alert('Es gibt noch kein Diagramm zum Drucken.'); return; }
     layouts.forEach(function (L) {
       var wmm = L.w * PX2MM, hmm = L.h * PX2MM;
       var sP = Math.min(1, 188 / wmm, 273 / hmm), sL = Math.min(1, 275 / wmm, 186 / hmm);
@@ -238,9 +240,13 @@
       svg.setAttribute('height', (hmm * s).toFixed(2) + 'mm');
       pa.appendChild(page);
     });
+    return layouts.length;
+  }
+  function printA4() {
+    if (!updatePrintArea()) { alert('Es gibt noch kein Diagramm zum Drucken.'); return; }
     window.print();
   }
-  window.addEventListener('afterprint', function () { $('printArea').innerHTML = ''; });
+  window.addEventListener('beforeprint', updatePrintArea);
 
   /* ---------- Beispiele ---------- */
   function initExamples() {

@@ -183,8 +183,9 @@ dialog::backdrop { background: rgba(0, 0, 0, .3); }
   html, body { height: auto; overflow: visible; background: #fff; display: block; }
   body > *:not(#printArea) { display: none !important; }
   #printArea { display: block; }
-  .print-page { page: hoch; break-after: page; text-align: center; }
+  .print-page { page: hoch; break-after: page; break-inside: avoid; page-break-inside: avoid; text-align: center; }
   .print-page.quer { page: quer; }
   .print-page:last-child { break-after: auto; }
-  .print-page svg { display: inline-block; }
+  /* Falls der Browser das Querformat ignoriert (z. B. iOS), wird auf die Seitenbreite verkleinert */
+  .print-page svg { display: inline-block; max-width: 100%; height: auto; }
 }
