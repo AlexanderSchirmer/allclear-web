@@ -44,7 +44,9 @@ Die Kurzreferenz der Syntax steht in der App unter „Syntax-Hilfe“.
 
 Die allCLEAR-Dokumentation lässt einige Punkte offen. allClear Web verhält sich dort so:
 
-- Jede Zeile ist eine Box. Zeilen werden nur über `;` (nächster Textbereich) zusammengefasst.
+- Eine Box endet mit einem Satzzeichen am Zeilenende (`.` `?` `:` `\` `;`). Zeilen ohne Satzzeichen werden mit der
+  nächsten Zeile zu einer Box verbunden, so lässt sich der Text einer Box auf mehrere Zeilen schreiben.
+  Unter `[BYLINE]` ist dagegen jede Zeile eine eigene Box.
 - Einrückung mit Tabs oder Leerzeichen; die Ebenen ergeben sich aus der Einrückungstiefe.
 - Ebenen: allCLEAR speicherte Ebenen nicht im Textformat. Hier beginnt `[LAYER=Nr, Name]` eine neue Ebene (Erweiterung).
 - Eine Zeile direkt nach `[UNTIL]` (z. B. `(Ja)Weiter.`) beschriftet den Schleifenausgang und beginnt keinen neuen Zweig.

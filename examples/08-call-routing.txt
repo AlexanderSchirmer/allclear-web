@@ -1,0 +1,34 @@
+Call Routing System
+{Nachbau eines allCLEAR-Beispiels. Ellipse und Sechseck waren im Original über
+ [SHAPE=Sn] und Schriftformatierung gestaltet – das entfällt in Schwarz-Weiß.}
+
+[HEAD]
+Phone Menu Options\
+	PROQUIS\
+		Desktop/LAN products\
+			Customer Care/Complaints Handling.
+			Document Management.
+			Vendor / Supplier Management.
+			Design / Project Management.
+			QS9000\
+				FMEA.
+				Control Plans.
+				PPAP.
+			Equipment Management\
+				Maintenance.
+				Calibration.
+			Problem Resolution Management.
+			Personnel Management & Training.
+			Health & Safety.
+			Audit & Management Review.
+		enterprise/intranet products.
+		Support.
+	allCLEAR\
+		OrgCharter.
+		Flowcharter.
+		Analyzer.
+	Crystal Reports.
+	Other\
+		Marketing.
+		Consultancy.
+		Accounts.

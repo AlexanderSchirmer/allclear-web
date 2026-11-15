@@ -53,11 +53,13 @@
 <dialog id="helpDialog">
   <form method="dialog" class="help">
     <h2>allCLEAR-Syntax – Kurzreferenz</h2>
-    <p>Erste Zeile(n): <b>Titel</b>. Danach eine Leerzeile oder eine Direktive. Jede weitere Zeile ist eine Box.
+    <p>Erste Zeile(n): <b>Titel</b>. Danach eine Leerzeile oder eine Direktive. Danach folgen die Boxen:
+      eine Box endet mit einem Satzzeichen am Zeilenende – ohne Satzzeichen geht der Text in der nächsten Zeile weiter.
       Die <b>Einrückung mit Tab</b> bestimmt die Struktur (Tab / Umschalt+Tab rücken ein bzw. aus).</p>
     <h3>Satzzeichen</h3>
     <table>
       <tr><th>Zeichen</th><th>Position</th><th>Wirkung</th></tr>
+      <tr><td><code>.</code></td><td>Zeilenende</td><td>Ende der Box (einfacher Schritt)</td></tr>
       <tr><td><code>?</code></td><td>Zeilenende</td><td>Entscheidung (IF) – eingerückt folgen <code>(Ja)…</code> und <code>(Nein)…</code></td></tr>
       <tr><td><code>:</code></td><td>Zeilenende</td><td>Auswahl (CASE) – eingerückt folgen Wahl-Boxen <code>()…</code></td></tr>
       <tr><td><code>\</code></td><td>Zeilenende</td><td>Baum – tiefer eingerückte Zeilen sind Kinder</td></tr>

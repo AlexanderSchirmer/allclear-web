@@ -111,10 +111,26 @@
     }
 
     /* ---------- Einträge mit Einrückungsebenen ---------- */
-    var entries = [], stack = [], byline = false;
+    /* Eine Box endet mit einem Satzzeichen (. ? : \ ;). Zeilen ohne Satzzeichen am Ende werden mit
+       der nächsten Zeile zu einer Box verbunden – außer unter [BYLINE], dort ist jede Zeile eine Box. */
+    var TERM = /[.?:\\;]$/;
+    var entries = [], stack = [], byline = false, pend = null;
+    function flush() {
+      if (!pend) return;
+      entries.push({ type: 'item', item: parseItem(pend.text, pend.byline), level: pend.level, no: pend.no });
+      pend = null;
+    }
     for (; i < lines.length; i++) {
       var L = lines[i];
-      if (L.blank || L.skip) continue;
+      if (L.blank) { flush(); continue; }
+      if (L.skip) continue;
+      if (pend && !/^[\[(!&]/.test(L.body)) {
+        if (L.col !== pend.col) warn(L.no, 'Zeile ' + pend.no + ' endet ohne Satzzeichen – diese Zeile wird an dieselbe Box angehängt.');
+        pend.text += ' ' + L.body;
+        if (TERM.test(L.body)) flush();
+        continue;
+      }
+      flush();
       while (stack.length && L.col < stack[stack.length - 1]) stack.pop();
       if (!stack.length || L.col > stack[stack.length - 1]) stack.push(L.col);
       var level = stack.length - 1;
@@ -126,9 +142,11 @@
       });
       if (sd.rest) {
         if (/^\[[^\]]*\]$/.test(sd.rest)) { warn(L.no, 'Unbekannte Direktive ' + sd.rest + ' wird ignoriert.'); continue; }
-        entries.push({ type: 'item', item: parseItem(sd.rest, byline), level: level, no: L.no });
+        if (byline || TERM.test(sd.rest)) entries.push({ type: 'item', item: parseItem(sd.rest, byline), level: level, no: L.no });
+        else pend = { text: sd.rest, level: level, no: L.no, col: L.col, byline: byline };
       }
     }
+    flush();
 
     /* ---------- ';' = nächste Zeile in den nächsten Textbereich derselben Box ---------- */
     for (var k = 0; k < entries.length; k++) {

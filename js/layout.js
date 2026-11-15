@@ -398,6 +398,21 @@
         absorb(b, k);
         cy += k.h + 12;
       });
+    } else if (depth > 0 && kids.length >= 4) {
+      /* Viele Kinder: paarweise links und rechts einer senkrechten Mittellinie (wie allCLEAR) */
+      var ry = y;
+      for (var p = 0; p < kids.length; p += 2) {
+        var top2 = ry + 18, rowH2 = 0;
+        [kids[p], kids[p + 1]].forEach(function (k, j) {
+          if (!k) return;
+          shift(k, j === 0 ? tx - 10 - k.w : tx + 10, top2);
+          var kb = k.entry, ax2 = kb.x + kb.w / 2;
+          b.edges.push({ from: box, to: kb, pts: simplify([{ x: tx, y: box.h }, { x: tx, y: ry }, { x: ax2, y: ry }, { x: ax2, y: topAt(kb, ax2) }]), labels: [] });
+          absorb(b, k);
+          rowH2 = Math.max(rowH2, k.h);
+        });
+        ry = top2 + rowH2 + 16;
+      }
     } else {
       var busY = y, top = busY + 18, x = 0;
       kids.forEach(function (k) { shift(k, x, top); x += k.w + HG; });
@@ -591,6 +606,11 @@
     var dx = M - bb2.x0 + (W - 2 * M - contentW) / 2, dy = M + tH - bb2.y0;
     shift(all, dx, dy);
     links.forEach(function (l) { l.cx += dx; l.cy += dy; });
+    /* Auf ganze Pixel runden: deckungsgleiche Linien bleiben scharf statt verwaschen-dick */
+    var rp = function (p) { p.x = Math.round(p.x); p.y = Math.round(p.y); };
+    all.boxes.forEach(rp);
+    all.edges.forEach(function (e) { e.pts.forEach(rp); });
+    all.lines.forEach(function (l) { l.pts.forEach(rp); });
 
     return {
       ref: layer.ref, name: layer.name, w: Math.ceil(W), h: Math.ceil(contentH + tH + 2 * M),

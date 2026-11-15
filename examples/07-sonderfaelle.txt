@@ -4,6 +4,9 @@ Sonderfälle der Syntax
 [HEAD]
 Wareneingang erfassen;
 Lager: Halle 3.
+Lieferschein mit der Bestellung
+abgleichen (Text über zwei Zeilen,
+der Punkt beendet die Box).
 Prüfprotokoll anlegen. {interner Hinweis}
 [DESCRIPTION=Vorlage QS-07 verwenden]
 Ist die Ware beschädigt?
@@ -15,10 +18,11 @@ Bestand im System buchen.
 [BYLINE]
 Mit BYLINE wird jede Zeile eine Box:
 Auch Zeilen mit Fragezeichen?
+Und Zeilen ohne Punkt
 Erzeugen keine Verzweigung.
 
 [TREE]
-Ablageordnung
+Ablageordnung.
 	Eingang.
 	Prüfung.
 	Archiv.

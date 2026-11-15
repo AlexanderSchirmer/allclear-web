@@ -13,7 +13,8 @@
     { file: '04-organigramm.txt', title: 'Organigramm mit Assistenz' },
     { file: '05-fishbone-lieferverzug.txt', title: 'Fishbone (Ursache-Wirkung)' },
     { file: '06-ebenen-auftrag.txt', title: 'Mehrere Ebenen mit LINK/LINKTO' },
-    { file: '07-sonderfaelle.txt', title: 'Textbereiche, BYLINE, Kommentare' }
+    { file: '07-sonderfaelle.txt', title: 'Mehrzeilige Boxen, Textbereiche, BYLINE' },
+    { file: '08-call-routing.txt', title: 'Großer Baum (Call Routing System)' }
   ];
   var DEFAULT_TEXT = 'Neues Diagramm\n\n[HEAD]\nErster Schritt.\nIst alles in Ordnung?\n\t(Ja)Weiter machen.\n\t(Nein)Problem beheben.\n!Fertig.\n';
 
