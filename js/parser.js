@@ -166,7 +166,7 @@
 
     /* ---------- Direktiven zuordnen, Ebenen und Startpunkte bilden ---------- */
     var doc = { title: titleLines.join('\n'), gotologic: false, layers: [], warnings: warnings };
-    var layer = null, root = null, pre = {}, lastItem = null, layerHasContent = false;
+    var layer = null, root = null, pre = {}, lastItem = null, layerHasContent = false, scopes = [];
     function newLayer(ref, name) {
       layer = { ref: String(ref), name: name || ('Ebene ' + ref), roots: [], boxes: [] };
       doc.layers.push(layer);
@@ -217,7 +217,16 @@
           case 'LINK': if (v) (pre.links = pre.links || []).push(parseLinkValue(v)); else warn(e.no, '[LINK] ohne Namen.'); break;
           case 'LINETEXT': pre.linetext = v || ''; break;
           case 'LOOP': pre.loop = true; break;
-          default: break; /* SHAPE, COLOR, BEGIN, END, BYLINE: keine Wirkung (Schwarz-Weiß) */
+          case 'SHAPE': {
+            var kind = AC.resolveShape ? AC.resolveShape(v) : null;
+            if (!kind) { warn(e.no, 'Unbekannte Form [SHAPE=' + (v || '') + '] – es wird die Standardform verwendet.'); break; }
+            var top = scopes[scopes.length - 1];
+            if (top && top.open) top.shape = kind; else pre.shape = kind;
+            break;
+          }
+          case 'BEGIN': scopes.push({ shape: pre.shape || null, open: true }); delete pre.shape; break;
+          case 'END': if (scopes.length) scopes.pop(); else warn(e.no, '[END] ohne vorangehendes [BEGIN].'); break;
+          default: break; /* COLOR, BYLINE: keine Wirkung (Schwarz-Weiß) */
         }
         return;
       }
@@ -229,6 +238,9 @@
       it.links = pre.links || [];
       it.loop = !!pre.loop;
       if (pre.linetext != null) it.linetext = pre.linetext;
+      it.shape = pre.shape || null;
+      for (var si = scopes.length - 1; si >= 0 && !it.shape; si--) it.shape = scopes[si].shape;
+      scopes.forEach(function (s) { s.open = false; });
       it.gotos = []; it.linkto = []; it.description = null;
       pre = {};
       lastItem = it;
@@ -245,7 +257,7 @@
         id: 'b' + (++idc), num: ++layerNum, role: role, areas: it.areas.slice(), text: it.text,
         linetext: it.linetext, line: e.no, label: it.label, links: it.links, linkto: it.linkto,
         gotos: it.gotos, description: it.description, stop: it.stop, choice: it.choice,
-        assistant: it.assistant
+        assistant: it.assistant, shape: it.shape || null
       };
       curLayer.boxes.push(b);
       return b;

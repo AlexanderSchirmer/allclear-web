@@ -14,7 +14,8 @@
     { file: '05-fishbone-lieferverzug.txt', title: 'Fishbone (Ursache-Wirkung)' },
     { file: '06-ebenen-auftrag.txt', title: 'Mehrere Ebenen mit LINK/LINKTO' },
     { file: '07-sonderfaelle.txt', title: 'Mehrzeilige Boxen, Textbereiche, BYLINE' },
-    { file: '08-call-routing.txt', title: 'Großer Baum (Call Routing System)' }
+    { file: '08-call-routing.txt', title: 'Großer Baum mit [SHAPE]' },
+    { file: '09-formen.txt', title: 'Alle Formen für [SHAPE=n]' }
   ];
   var DEFAULT_TEXT = 'Neues Diagramm\n\n[HEAD]\nErster Schritt.\nIst alles in Ordnung?\n\t(Ja)Weiter machen.\n\t(Nein)Problem beheben.\n!Fertig.\n';
 

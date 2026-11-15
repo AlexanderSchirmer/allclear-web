@@ -1,9 +1,11 @@
 Call Routing System
-{Nachbau eines allCLEAR-Beispiels. Ellipse und Sechseck waren im Original über
- [SHAPE=Sn] und Schriftformatierung gestaltet – das entfällt in Schwarz-Weiß.}
+{Nachbau eines allCLEAR-Beispiels. [SHAPE] gilt für die nächste Box,
+ als Nummer aus der Palette (3 = Ellipse) oder als Name.}
 
 [HEAD]
+[SHAPE=Sechseck]
 Phone Menu Options\
+	[SHAPE=3]
 	PROQUIS\
 		Desktop/LAN products\
 			Customer Care/Complaints Handling.
@@ -23,10 +25,12 @@ Phone Menu Options\
 			Audit & Management Review.
 		enterprise/intranet products.
 		Support.
+	[SHAPE=Ellipse]
 	allCLEAR\
 		OrgCharter.
 		Flowcharter.
 		Analyzer.
+	[SHAPE=Ellipse]
 	Crystal Reports.
 	Other\
 		Marketing.

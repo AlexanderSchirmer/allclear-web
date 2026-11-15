@@ -16,42 +16,56 @@
   AC.escapeXml = esc;
 
   /* ---------- SVG ---------- */
-  function polygon(pts) {
-    return '<path d="M' + pts.map(function (p) { return F(p[0]) + ' ' + F(p[1]); }).join(' L') + ' Z" fill="#ffffff" stroke="#000000"/>';
-  }
+  var ST = ' fill="#ffffff" stroke="#000000"';
   function shapeSvg(b) {
-    var x = b.x, y = b.y, w = b.w, h = b.h;
-    switch (b.role) {
-      case 'if': return polygon([[x + w / 2, y], [x + w, y + h / 2], [x + w / 2, y + h], [x, y + h / 2]]);
-      case 'case': return polygon([[x + G.S_HEX, y], [x + w - G.S_HEX, y], [x + w, y + h / 2], [x + w - G.S_HEX, y + h], [x + G.S_HEX, y + h], [x, y + h / 2]]);
-      case 'loop': case 'assistant':
-        return '<ellipse cx="' + F(x + w / 2) + '" cy="' + F(y + h / 2) + '" rx="' + F(w / 2) + '" ry="' + F(h / 2) + '" fill="#ffffff" stroke="#000000"/>';
-      case 'start': case 'stop': return polygon([[x, y + G.S_MI], [x + w, y], [x + w, y + h], [x, y + h]]);
-      case 'choice': return polygon([[x, y], [x + w, y], [x + w - G.D_MO, y + h], [x + G.D_MO, y + h]]);
-      case 'desc': return '<rect x="' + F(x) + '" y="' + F(y) + '" width="' + F(w) + '" height="' + F(h) + '" fill="#ffffff" stroke="#000000" stroke-dasharray="4 3"/>';
-      case 'fbLabel': return '';
-      default: return '<rect x="' + F(x) + '" y="' + F(y) + '" width="' + F(w) + '" height="' + F(h) + '" fill="#ffffff" stroke="#000000"/>';
+    var d = AC.shapeDef(b), x = b.x, y = b.y, w = b.w, h = b.h, out;
+    if (d.none) return '';
+    if (d.ellipse) return '<ellipse cx="' + F(x + w / 2) + '" cy="' + F(y + h / 2) + '" rx="' + F(w / 2) + '" ry="' + F(h / 2) + '"' + ST + '/>';
+    var P = AC.shapePoints(b);
+    if (P) out = '<path d="M' + P.map(function (p) { return F(x + p[0]) + ' ' + F(y + p[1]); }).join(' L') + ' Z"' + ST + '/>';
+    else if (d.wave) {
+      var a = Math.max(3, h * 0.1);
+      out = d.wave === 'bottom'
+        ? '<path d="M' + F(x) + ' ' + F(y) + ' H' + F(x + w) + ' V' + F(y + h - a) + ' C' + F(x + w * 0.75) + ' ' + F(y + h + a) + ' ' + F(x + w * 0.25) + ' ' + F(y + h - 3 * a) + ' ' + F(x) + ' ' + F(y + h - a) + ' Z"' + ST + '/>'
+        : '<path d="M' + F(x) + ' ' + F(y + a) + ' C' + F(x + w * 0.25) + ' ' + F(y + 3 * a) + ' ' + F(x + w * 0.75) + ' ' + F(y - a) + ' ' + F(x + w) + ' ' + F(y + a) +
+          ' V' + F(y + h - a) + ' C' + F(x + w * 0.75) + ' ' + F(y + h - 3 * a) + ' ' + F(x + w * 0.25) + ' ' + F(y + h + a) + ' ' + F(x) + ' ' + F(y + h - a) + ' Z"' + ST + '/>';
+    } else if (d.round === 'right') {
+      var r = Math.min(h / 2, w / 2);
+      out = '<path d="M' + F(x) + ' ' + F(y) + ' H' + F(x + w - r) + ' A' + F(r) + ' ' + F(h / 2) + ' 0 0 1 ' + F(x + w - r) + ' ' + F(y + h) + ' H' + F(x) + ' Z"' + ST + '/>';
+    } else if (d.round === 'top') {
+      var t = Math.min(h * 0.35, 16);
+      out = '<path d="M' + F(x) + ' ' + F(y + h) + ' V' + F(y + t) + ' A' + F(w / 2) + ' ' + F(t) + ' 0 0 1 ' + F(x + w) + ' ' + F(y + t) + ' V' + F(y + h) + ' Z"' + ST + '/>';
+    } else if (d.cylinder) {
+      var c = 8;
+      out = '<path d="M' + F(x + w - c) + ' ' + F(y) + ' H' + F(x + c) + ' A' + c + ' ' + F(h / 2) + ' 0 0 0 ' + F(x + c) + ' ' + F(y + h) + ' H' + F(x + w - c) + ' Z"' + ST + '/>' +
+        '<ellipse cx="' + F(x + w - c) + '" cy="' + F(y + h / 2) + '" rx="' + c + '" ry="' + F(h / 2) + '"' + ST + '/>';
+    } else {
+      var rx = d.stadium ? h / 2 : (d.rx || 0);
+      out = '<rect x="' + F(x) + '" y="' + F(y) + '" width="' + F(w) + '" height="' + F(h) + '"' + (rx ? ' rx="' + F(rx) + '"' : '') + ST +
+        (d.dashed ? ' stroke-dasharray="4 3"' : '') + '/>';
     }
+    if (d.deco) d.deco(w, h).forEach(function (l) {
+      out += '<path d="M' + F(x + l[0]) + ' ' + F(y + l[1]) + ' L' + F(x + l[2]) + ' ' + F(y + l[3]) + '" stroke="#000000" fill="none"' + (l[4] ? ' stroke-width="' + l[4] + '"' : '') + '/>';
+    });
+    return out;
   }
+  function frac(v, size) { return v ? (Math.abs(v) < 1 ? v * size : v) : 0; }
   function textSvg(b) {
+    var d = AC.shapeDef(b);
     var lines = b.lines || [];
     var nl = lines.reduce(function (s, a) { return s + Math.max(1, a.length); }, 0);
     var th = nl * G.LH + (lines.length - 1) * G.AREA_GAP;
-    var cy = b.y + b.h / 2 + ((b.role === 'start' || b.role === 'stop') ? G.S_MI / 2 : 0);
+    var cy = b.y + b.h / 2 + (b.role === 'fbLabel' ? 0 : frac(d.textDy, b.h));
     var top = cy - th / 2;
-    var anchor = 'middle', tx = b.x + b.w / 2;
+    var anchor = 'middle', tx = b.x + b.w / 2 + frac(d.textDx, b.w);
     if (b.role === 'fbLabel') { anchor = 'end'; tx = b.x + b.w; }
     if (b.role === 'desc') { anchor = 'start'; tx = b.x + 8; }
     var out = '', yy = top;
-    var rectLike = ['process', 'start', 'stop', 'choice', 'case', 'tree', 'desc', 'fbCause', 'fbEffect'].indexOf(b.role) >= 0;
+    var withSep = !d.ellipse && !d.none && d.fit !== 'diamond' && d.fit !== 'triangle';
     lines.forEach(function (area, ai) {
       if (ai > 0) {
         var sy = yy + G.AREA_GAP / 2;
-        if (rectLike) {
-          var x0 = b.x, x1 = b.x + b.w;
-          if (b.role === 'choice') { x0 = AC.leftAt(b, sy); x1 = AC.rightAt(b, sy); }
-          out += '<path d="M' + F(x0) + ' ' + F(sy) + ' L' + F(x1) + ' ' + F(sy) + '" stroke="#000000" fill="none"/>';
-        }
+        if (withSep) out += '<path d="M' + F(AC.leftAt(b, sy)) + ' ' + F(sy) + ' L' + F(AC.rightAt(b, sy)) + ' ' + F(sy) + '" stroke="#000000" fill="none"/>';
         yy += G.AREA_GAP;
       }
       (area.length ? area : ['']).forEach(function (ln) {
@@ -120,16 +134,29 @@
     return 'spacingLeft=' + s + ';spacingRight=' + s + ';';
   }
   function styleOf(b) {
-    switch (b.role) {
-      case 'if': return 'rhombus;' + sideSpacing(b) + BASE;
-      case 'case': return 'shape=hexagon;perimeter=hexagonPerimeter2;fixedSize=1;size=' + G.S_HEX + ';' + BASE;
-      case 'loop': case 'assistant': return 'ellipse;' + sideSpacing(b) + BASE;
-      case 'start': case 'stop': return 'shape=manualInput;size=' + G.S_MI + ';spacingTop=' + G.S_MI + ';' + BASE;
-      case 'choice': return 'shape=manualOperation;size=' + r4(G.D_MO / b.w) + ';' + BASE;
-      case 'desc': return 'rounded=0;dashed=1;align=left;spacingLeft=6;' + BASE;
-      case 'fbLabel': return TEXT + 'align=right;verticalAlign=middle;whiteSpace=nowrap;fontSize=12;';
-      default: return 'rounded=0;' + BASE;
-    }
+    var d = AC.shapeDef(b);
+    if (b.role === 'fbLabel') return TEXT + 'align=right;verticalAlign=middle;whiteSpace=nowrap;fontSize=12;';
+    if (b.role === 'desc') return 'rounded=0;dashed=1;align=left;spacingLeft=6;' + BASE;
+    if (d.none) return TEXT + 'align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=12;';
+    var s;
+    if (d.dio) s = typeof d.dio === 'function' ? d.dio(b) : d.dio;
+    else if (d.poly) {
+      var P = d.poly(b.w, b.h);
+      s = 'shape=mxgraph.basic.polygon;polyline=0;polyCoords=[' + P.map(function (p) { return '[' + r4(p[0] / b.w) + ',' + r4(p[1] / b.h) + ']'; }).join(',') + '];';
+    } else s = 'rounded=0;';
+    if (d.fit === 'diamond' || d.fit === 'ellipse' || d.fit === 'compact' || d.fit === 'triangle') s += sideSpacing(b);
+    var dy = frac(d.textDy, b.h);
+    if (dy && !/spacingTop/.test(s)) s += (dy > 0 ? 'spacingTop=' : 'spacingBottom=') + Math.round(Math.abs(dy) * 2) + ';';
+    return s + BASE;
+  }
+  /* Zierlinien (z. B. Doppellinien) als Linien innerhalb der Box – sie bewegen sich in draw.io mit */
+  function decoXml(b) {
+    var d = AC.shapeDef(b);
+    if (!d.deco || d.dio) return '';
+    return d.deco(b.w, b.h).map(function (l, k) {
+      return '<mxCell id="' + b.id + '-d' + k + '" value="" style="endArrow=none;html=1;strokeColor=#000000;' + (l[4] ? 'strokeWidth=' + l[4] + ';' : '') + '" edge="1" parent="' + b.id + '">' +
+        '<mxGeometry relative="1" as="geometry"><mxPoint x="' + F(l[0]) + '" y="' + F(l[1]) + '" as="sourcePoint"/><mxPoint x="' + F(l[2]) + '" y="' + F(l[3]) + '" as="targetPoint"/></mxGeometry></mxCell>';
+    }).join('');
   }
   function vertex(id, value, style, x, y, w, h) {
     return '<mxCell id="' + id + '" value="' + esc(value) + '" style="' + style + '" vertex="1" parent="1"><mxGeometry x="' + F(x) +
@@ -170,7 +197,7 @@
       L.edges.forEach(function (e, k) { out.push(edgeXml(P + 'e' + k, e, e.arrow !== false)); });
       L.boxes.forEach(function (b) {
         var val = (b.disp || b.areas).map(htmlEsc).join('<hr>');
-        out.push(vertex(b.id, val, styleOf(b), b.x, b.y, b.w, b.h));
+        out.push(vertex(b.id, val, styleOf(b), b.x, b.y, b.w, b.h) + decoXml(b));
       });
       L.texts.forEach(function (t, k) { out.push(textCell(P + 't' + k, t)); });
       L.links.forEach(function (lk, k) {

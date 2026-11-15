@@ -87,7 +87,26 @@
       <tr><td><code>[DESCRIPTION=Text]</code></td><td>nach der Box</td><td>Beschreibung neben der Box mit Pfeil</td></tr>
       <tr><td><code>[LINETEXT=Text]</code></td><td>vor der Box</td><td>Text auf der eingehenden Linie</td></tr>
       <tr><td><code>[BYLINE]</code></td><td>vor den Zeilen</td><td>Jede Zeile wird eine einfache Box (Satzzeichen ohne Wirkung)</td></tr>
-      <tr><td><code>[SHAPE]</code>, <code>[COLOR]</code>, <code>[BEGIN]</code>, <code>[END]</code></td><td></td><td>Werden akzeptiert, haben in Schwarz-Weiß keine Wirkung</td></tr>
+      <tr><td><code>[SHAPE=n]</code> / <code>[SHAPE=Name]</code></td><td>vor der Box</td><td>Form der nächsten Box (siehe unten)</td></tr>
+      <tr><td><code>[BEGIN]</code> … <code>[END]</code></td><td>um mehrere Boxen</td><td>Bereich: ein <code>[SHAPE]</code> direkt davor oder direkt danach gilt für alle Boxen darin</td></tr>
+      <tr><td><code>[COLOR]</code></td><td></td><td>Wird akzeptiert, hat in Schwarz-Weiß keine Wirkung</td></tr>
+    </table>
+    <h3>Formen für [SHAPE]</h3>
+    <p>Die Nummer ist die Position in der allCLEAR-Palette „All Shapes“, zeilenweise gezählt (0 = ohne Rahmen).
+      Das Handbuch nennt die Nummern nicht, sie sind aus der Abbildung der Palette abgeleitet. Eindeutiger sind Namen;
+      das Beispiel „09-formen“ zeigt alle Formen.</p>
+    <table>
+      <tr><th>Nr.</th><th>Name (Beispiele)</th><th>Nr.</th><th>Name (Beispiele)</th></tr>
+      <tr><td>1</td><td>Rechteck</td><td>12</td><td>Sechseck, Vorbereitung</td></tr>
+      <tr><td>2</td><td>Raute, Entscheidung</td><td>13</td><td>Verzögerung</td></tr>
+      <tr><td>3</td><td>Ellipse, Oval, Kreis</td><td>18</td><td>Vordefinierter Prozess, Unterprozess</td></tr>
+      <tr><td>4</td><td>Trapez, Wahl</td><td>19</td><td>Interner Speicher</td></tr>
+      <tr><td>5</td><td>Parallelogramm, Daten</td><td>28</td><td>Terminator</td></tr>
+      <tr><td>8</td><td>Dokument</td><td>29</td><td>Zylinder</td></tr>
+      <tr><td>10</td><td>Band, Lochstreifen</td><td>30</td><td>Manuelle Eingabe, Start</td></tr>
+      <tr><td>11</td><td>Abgerundet</td><td>32 / 33</td><td>Pfeil rechts / Pfeil links</td></tr>
+      <tr><td>14</td><td>Karte</td><td>35–38</td><td>Dreieck (oben, unten, links, rechts)</td></tr>
+      <tr><td>0</td><td>ohne Rahmen</td><td>39 / 40 / 41</td><td>Fünfeck / Sechseck stehend / Achteck</td></tr>
     </table>
     <h3>Bedienung</h3>
     <ul>
@@ -100,6 +119,7 @@
   </form>
 </dialog>
 
+<script src="js/shapes.js"></script>
 <script src="js/parser.js"></script>
 <script src="js/layout.js"></script>
 <script src="js/render.js"></script>

@@ -7,8 +7,7 @@
   'use strict';
 
   var FS = 12, LH = 15, AREA_GAP = 9, VG = 34, HG = 24, LBL = 11;
-  var S_MI = 10, S_HEX = 15, D_MO = 12;
-  AC.GEOM = { FS: FS, LH: LH, AREA_GAP: AREA_GAP, S_MI: S_MI, S_HEX: S_HEX, D_MO: D_MO };
+  AC.GEOM = { FS: FS, LH: LH, AREA_GAP: AREA_GAP };
 
   /* ---------- Textmessung ---------- */
   var ctx2d = null, cache = new Map();
@@ -52,37 +51,52 @@
   }
   AC.wrap = wrap;
 
-  /* ---------- Geometrie der Formen ---------- */
-  function isEllipse(b) { return b.role === 'loop' || b.role === 'assistant'; }
+  /* ---------- Geometrie der Formen (aus js/shapes.js) ---------- */
+  function ellipseAt(b, v, horizontal, sign) {
+    var rx = b.w / 2, ry = b.h / 2;
+    if (horizontal) { var dx = (v - b.x - rx) / rx; return b.y + ry - ry * Math.sqrt(Math.max(0, 1 - dx * dx)); }
+    var dy = (v - b.y - ry) / ry;
+    return b.x + rx + sign * rx * Math.sqrt(Math.max(0, 1 - dy * dy));
+  }
+  /* Oberkante der Form an der Stelle x */
   function topAt(b, x) {
-    if (b.role === 'start' || b.role === 'stop') return b.y + S_MI * (1 - (x - b.x) / b.w);
-    if (isEllipse(b)) {
-      var rx = b.w / 2, ry = b.h / 2, dx = (x - b.x - rx) / rx;
-      return b.y + ry - ry * Math.sqrt(Math.max(0, 1 - dx * dx));
+    var d = AC.shapeDef(b);
+    if (d.ellipse) return ellipseAt(b, x, true);
+    var P = AC.shapePoints(b);
+    if (!P) return b.y;
+    var rx = x - b.x, best = Infinity;
+    for (var i = 0; i < P.length; i++) {
+      var p = P[i], q = P[(i + 1) % P.length];
+      if (rx < Math.min(p[0], q[0]) - 1e-6 || rx > Math.max(p[0], q[0]) + 1e-6) continue;
+      var y = Math.abs(q[0] - p[0]) < 1e-9 ? Math.min(p[1], q[1]) : p[1] + (q[1] - p[1]) * (rx - p[0]) / (q[0] - p[0]);
+      if (y < best) best = y;
     }
-    return b.y;
+    return b.y + (best === Infinity ? 0 : best);
   }
-  function rightAt(b, y) {
-    if (b.role === 'choice') return b.x + b.w - D_MO * (y - b.y) / b.h;
-    if (isEllipse(b)) {
-      var rx = b.w / 2, ry = b.h / 2, dy = (y - b.y - ry) / ry;
-      return b.x + rx + rx * Math.sqrt(Math.max(0, 1 - dy * dy));
+  /* rechte bzw. linke Kante der Form auf Höhe y */
+  function sideAt(b, y, right) {
+    var d = AC.shapeDef(b);
+    if (d.ellipse) return ellipseAt(b, y, false, right ? 1 : -1);
+    var P = AC.shapePoints(b);
+    if (!P) return right ? b.x + b.w : b.x;
+    var ry = y - b.y, best = right ? -Infinity : Infinity;
+    for (var i = 0; i < P.length; i++) {
+      var p = P[i], q = P[(i + 1) % P.length];
+      if (ry < Math.min(p[1], q[1]) - 1e-6 || ry > Math.max(p[1], q[1]) + 1e-6) continue;
+      var xs = Math.abs(q[1] - p[1]) < 1e-9 ? [p[0], q[0]] : [p[0] + (q[0] - p[0]) * (ry - p[1]) / (q[1] - p[1])];
+      xs.forEach(function (x) { best = right ? Math.max(best, x) : Math.min(best, x); });
     }
-    return b.x + b.w;
+    if (!isFinite(best)) return right ? b.x + b.w : b.x;
+    return b.x + best;
   }
-  function leftAt(b, y) {
-    if (b.role === 'choice') return b.x + D_MO * (y - b.y) / b.h;
-    if (isEllipse(b)) {
-      var rx = b.w / 2, ry = b.h / 2, dy = (y - b.y - ry) / ry;
-      return b.x + rx - rx * Math.sqrt(Math.max(0, 1 - dy * dy));
-    }
-    return b.x;
-  }
+  function rightAt(b, y) { return sideAt(b, y, true); }
+  function leftAt(b, y) { return sideAt(b, y, false); }
   AC.topAt = topAt; AC.rightAt = rightAt; AC.leftAt = leftAt;
 
   /* ---------- Boxgröße ---------- */
   var WRAP = { process: 120, start: 120, stop: 120, choice: 112, 'if': 96, 'case': 116, loop: 104,
     tree: 124, assistant: 100, fbEffect: 100, fbCause: 104, fbLabel: 220, desc: 150 };
+  var FIT_WRAP = { diamond: 96, ellipse: 104, compact: 90, triangle: 80 };
 
   function displayText(t, opts) {
     if (opts && opts.hidePunct) t = t.replace(/\s*[.:]$/, '');
@@ -90,7 +104,8 @@
   }
 
   function sizeBox(box, opts) {
-    var ww = WRAP[box.role] || 120;
+    var d = AC.shapeDef(box);
+    var ww = (d.fit && FIT_WRAP[d.fit]) || WRAP[box.role] || 120;
     box.disp = box.areas.map(function (a) { return displayText(a, opts); });
     box.lines = box.disp.map(function (a) { return wrap(a, ww, FS); });
     var all = [].concat.apply([], box.lines);
@@ -98,15 +113,20 @@
     var nl = box.lines.reduce(function (s, a) { return s + Math.max(1, a.length); }, 0);
     var th = nl * LH + (box.lines.length - 1) * AREA_GAP;
     var iw = tw + 16, ih = th + 12, w, h;
-    switch (box.role) {
-      case 'if': w = Math.max(116, tw * 1.9 + 24); h = Math.max(56, th * 1.9 + 16); break;
-      case 'case': w = Math.max(110, iw + 2 * S_HEX); h = Math.max(40, ih); break;
-      case 'loop': case 'assistant': w = Math.max(110, iw * 1.4); h = Math.max(44, ih * 1.45); break;
-      case 'choice': w = Math.max(110, iw + 2 * D_MO); h = Math.max(36, ih); break;
-      case 'start': case 'stop': w = Math.max(110, iw); h = Math.max(46, ih + S_MI); break;
-      case 'fbLabel': w = tw + 4; h = th; break;
-      case 'desc': w = iw; h = Math.max(28, ih); break;
-      default: w = Math.max(110, iw); h = Math.max(36, ih);
+    if (box.role === 'fbLabel') { w = tw + 4; h = th; }
+    else if (box.role === 'desc') { w = iw; h = Math.max(28, ih); }
+    else {
+      switch (d.fit) {
+        case 'diamond': w = Math.max(116, tw * 1.9 + 24); h = Math.max(56, th * 1.9 + 16); break;
+        case 'ellipse': w = Math.max(110, iw * 1.4); h = Math.max(44, ih * 1.45); break;
+        case 'compact': w = Math.max(90, iw * 1.4); h = Math.max(60, ih * 1.7); break;
+        case 'triangle': w = Math.max(110, tw * 2.2 + 16); h = Math.max(70, th * 2.4 + 16); break;
+        default: {
+          var pad = d.pad || [0, 0];
+          w = Math.max(110, iw + pad[0]);
+          h = Math.max(box.role === 'start' || box.role === 'stop' ? 46 : 36, ih + pad[1]);
+        }
+      }
     }
     box.w = Math.round(w);
     box.h = Math.round(h);

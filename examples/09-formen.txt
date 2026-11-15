@@ -1,0 +1,97 @@
+Formen der Palette „All Shapes“
+{[SHAPE=n] gilt für die nächste Box. Die Nummer ist die Position in der allCLEAR-Palette
+ „All Shapes“ (zeilenweise gezählt, „None“ = 0). Statt der Nummer geht auch ein Name,
+ z. B. [SHAPE=Ellipse] oder [SHAPE=Sechseck]. Mit [BEGIN] … [END] gilt eine Form für mehrere Boxen.}
+
+[TREE]
+[SHAPE=0]
+Formen nach Nummer\
+	Zeile 1\
+		[SHAPE=1]
+		1 Rechteck.
+		[SHAPE=2]
+		2 Raute.
+		[SHAPE=3]
+		3 Ellipse.
+		[SHAPE=4]
+		4 Trapez.
+		[SHAPE=5]
+		5 Parallelogramm.
+	Zeile 2\
+		[SHAPE=6]
+		6 Parallelogramm links.
+		[SHAPE=7]
+		7 Sechseck flach.
+		[SHAPE=8]
+		8 Dokument.
+		[SHAPE=9]
+		9 Band.
+		[SHAPE=10]
+		10 Band.
+		[SHAPE=11]
+		11 Abgerundet.
+	Zeile 3\
+		[SHAPE=12]
+		12 Sechseck.
+		[SHAPE=13]
+		13 Verzögerung.
+		[SHAPE=14]
+		14 Karte links.
+		[SHAPE=15]
+		15 Karte rechts.
+		[SHAPE=16]
+		16 Linie links.
+		[SHAPE=17]
+		17 Linie rechts.
+	Zeile 4\
+		[SHAPE=18]
+		18 Vordefinierter Prozess.
+		[SHAPE=19]
+		19 Interner Speicher.
+		[SHAPE=20]
+		20 Linie oben.
+		[SHAPE=21]
+		21 Linie unten.
+		[SHAPE=22]
+		22 Linien oben und unten.
+		[SHAPE=23]
+		23 Balken links.
+	Zeile 5\
+		[SHAPE=24]
+		24 Balken rechts.
+		[SHAPE=25]
+		25 Spitze links.
+		[SHAPE=26]
+		26 Spitze rechts.
+		[SHAPE=27]
+		27 Abgeschrägt.
+		[SHAPE=28]
+		28 Terminator.
+		[SHAPE=29]
+		29 Zylinder.
+	Zeile 6\
+		[SHAPE=30]
+		30 Manuelle Eingabe.
+		[SHAPE=31]
+		31 Gespiegelt.
+		[SHAPE=32]
+		32 Pfeil rechts.
+		[SHAPE=33]
+		33 Pfeil links.
+		[SHAPE=34]
+		34 Bogen oben.
+		[SHAPE=35]
+		35 Dreieck.
+	Zeile 7\
+		[SHAPE=36]
+		36 Dreieck unten.
+		[SHAPE=37]
+		37 Dreieck links.
+		[SHAPE=38]
+		38 Dreieck rechts.
+		[SHAPE=39]
+		39 Fünfeck.
+		[SHAPE=40]
+		40 Sechseck stehend.
+		[SHAPE=41]
+		41 Achteck.

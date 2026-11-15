@@ -36,7 +36,10 @@ python -m http.server 8765
 - Druck auf A4: jede Ebene auf eine Seite skaliert, Hoch-/Querformat automatisch, keine Vergrößerung kleiner Diagramme
 - Unterstützt: IF (`?`), CASE (`:`), Bäume (`\`), Assistenz (`&`), Stop (`!`), Linientexte `( )`, Textbereiche (`;`), Kommentare `{ }`,
   `[HEAD] [FLOW] [TREE] [FISHBONE] [LOOP] [UNTIL] [GOTO] [LABEL] [GOTOLOGIC] [LINKTO] [LINK] [DESCRIPTION] [LINETEXT] [BYLINE]`
-- `[SHAPE]`, `[COLOR]`, `[BEGIN]`, `[END]` werden akzeptiert, haben aber keine Wirkung (Schwarz-Weiß)
+- `[SHAPE=n]` bzw. `[SHAPE=Name]` setzt die Form der nächsten Box; mit `[BEGIN]` … `[END]` für mehrere Boxen.
+  Die Nummern folgen der Palette „All Shapes“ aus dem Handbuch (Abb. 5.3, zeilenweise, 0 = ohne Rahmen) – das Handbuch
+  nennt sie nicht ausdrücklich, sie sind aus der Abbildung abgeleitet. Alle 41 Formen zeigt `examples/09-formen.txt`.
+- `[COLOR]` wird akzeptiert, hat aber keine Wirkung (Schwarz-Weiß)
 
 Die Kurzreferenz der Syntax steht in der App unter „Syntax-Hilfe“.
 
