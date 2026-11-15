@@ -85,7 +85,8 @@
     if (!L || !svg) return;
     if (state.fit) {
       var c = $('canvas');
-      var z = Math.min((c.clientWidth - 32) / L.w, (c.clientHeight - 32) / L.h);
+      var pad = 2 * (parseFloat(getComputedStyle(c).paddingLeft) || 0) + 4;
+      var z = Math.min((c.clientWidth - pad) / L.w, (c.clientHeight - pad) / L.h);
       state.zoom = Math.max(0.1, Math.min(1.5, z));
     }
     svg.style.width = (L.w * state.zoom) + 'px';
@@ -337,7 +338,77 @@
     e.preventDefault();
     setZoom(state.zoom * (e.deltaY < 0 ? 1.1 : 1 / 1.1));
   }, { passive: false });
-  window.addEventListener('resize', function () { if (state.fit) applyZoom(); });
+  if (window.ResizeObserver) new ResizeObserver(function () { if (state.fit) applyZoom(); }).observe($('canvas'));
+  else window.addEventListener('resize', function () { if (state.fit) applyZoom(); });
+
+  /* Menü auf schmalen Bildschirmen */
+  $('btnMenu').onclick = function () {
+    var open = $('toolbar').classList.toggle('menu-open');
+    $('btnMenu').setAttribute('aria-expanded', String(open));
+  };
+  $('toolbar').addEventListener('click', function (e) {
+    var b = e.target.closest('button.m-more');
+    if (b && $('toolbar').classList.contains('menu-open')) {
+      $('toolbar').classList.remove('menu-open');
+      $('btnMenu').setAttribute('aria-expanded', 'false');
+    }
+  });
+
+  /* Vollbild: echtes Fullscreen, sonst (z. B. iPhone) Ersatz per CSS */
+  var pane = $('diagramPane');
+  function fsElement() { return document.fullscreenElement || document.webkitFullscreenElement || null; }
+  function isFs() { return fsElement() === pane || pane.classList.contains('fs'); }
+  function updateFsButton() {
+    var on = isFs();
+    $('btnFullscreen').querySelector('.ico').textContent = on ? '✕' : '⛶';
+    $('btnFullscreen').querySelector('.lbl').textContent = on ? 'Schließen' : 'Vollbild';
+    $('btnFullscreen').title = on ? 'Vollbild beenden (Esc)' : 'Diagramm im Vollbild anzeigen';
+    document.body.classList.toggle('fs-open', on);
+    state.fit = true;
+    applyZoom();
+  }
+  function enterFs() {
+    var req = pane.requestFullscreen || pane.webkitRequestFullscreen;
+    var fallback = function () { if (!fsElement() && !pane.classList.contains('fs')) { pane.classList.add('fs'); updateFsButton(); } };
+    if (!req) { fallback(); return; }
+    try {
+      var p = req.call(pane);
+      if (p && p.catch) p.catch(fallback);
+    } catch (e) { fallback(); return; }
+    /* Manche eingebetteten Browser lehnen Fullscreen stillschweigend ab */
+    setTimeout(fallback, 600);
+  }
+  function exitFs() {
+    if (pane.classList.contains('fs')) { pane.classList.remove('fs'); updateFsButton(); return; }
+    var ex = document.exitFullscreen || document.webkitExitFullscreen;
+    if (fsElement() && ex) ex.call(document);
+  }
+  $('btnFullscreen').onclick = function () { if (isFs()) exitFs(); else enterFs(); };
+  document.addEventListener('fullscreenchange', updateFsButton);
+  document.addEventListener('webkitfullscreenchange', updateFsButton);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && pane.classList.contains('fs')) exitFs(); });
+
+  /* Pinch-Zoom mit zwei Fingern im Diagramm */
+  (function () {
+    var c = $('canvas'), pinch = null;
+    var dist = function (t) { return Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY); };
+    c.addEventListener('touchstart', function (e) {
+      if (e.touches.length !== 2) return;
+      var r = c.getBoundingClientRect();
+      var mx = (e.touches[0].clientX + e.touches[1].clientX) / 2 - r.left;
+      var my = (e.touches[0].clientY + e.touches[1].clientY) / 2 - r.top;
+      pinch = { d: dist(e.touches), z: state.zoom, mx: mx, my: my, px: (c.scrollLeft + mx) / state.zoom, py: (c.scrollTop + my) / state.zoom };
+    }, { passive: true });
+    c.addEventListener('touchmove', function (e) {
+      if (!pinch || e.touches.length !== 2) return;
+      e.preventDefault();
+      setZoom(pinch.z * dist(e.touches) / pinch.d);
+      c.scrollLeft = pinch.px * state.zoom - pinch.mx;
+      c.scrollTop = pinch.py * state.zoom - pinch.my;
+    }, { passive: false });
+    c.addEventListener('touchend', function (e) { if (e.touches.length < 2) pinch = null; });
+    c.addEventListener('touchcancel', function () { pinch = null; });
+  })();
   window.addEventListener('keydown', function (e) {
     if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey) {
       var k = e.key.toLowerCase();

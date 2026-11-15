@@ -7,32 +7,23 @@
 <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
-<header class="toolbar">
+<header class="toolbar" id="toolbar">
   <span class="brand">allClear&nbsp;Web</span>
-  <div class="group">
-    <button id="btnNew" title="Neues Diagramm">Neu</button>
-    <button id="btnOpen" title="Textdatei öffnen (Strg+O)">Öffnen…</button>
-    <button id="btnSave" title="Als Textdatei speichern (Strg+S)">Speichern</button>
-    <select id="selExample" title="Beispiel laden"><option value="">Beispiele…</option></select>
-    <input type="file" id="fileInput" accept=".txt,text/plain" hidden>
-  </div>
-  <div class="group">
-    <button id="btnExport" title="Diagramm als .drawio.svg herunterladen – direkt in draw.io bearbeitbar">Export .drawio.svg</button>
-    <button id="btnPrint" title="Alle Ebenen auf A4 drucken (Strg+P)">Drucken A4</button>
-  </div>
-  <div class="group">
-    <button id="btnZoomOut" title="Verkleinern">−</button>
-    <button id="btn100" title="Originalgröße"><span id="zoomLabel">100 %</span></button>
-    <button id="btnZoomIn" title="Vergrößern">+</button>
-    <button id="btnFit" title="In Fenster einpassen">Einpassen</button>
-  </div>
-  <div class="group opts">
-    <label><input type="checkbox" id="optNumbers"> Box-Nummern</label>
-    <label><input type="checkbox" id="optPunct"> „.“ und „:“ ausblenden</label>
-  </div>
+  <button id="btnNew" class="m-more" title="Neues Diagramm">Neu</button>
+  <button id="btnOpen" title="Textdatei öffnen (Strg+O)">Öffnen…</button>
+  <button id="btnSave" class="m-more" title="Als Textdatei speichern (Strg+S)">Speichern</button>
+  <select id="selExample" title="Beispiel laden"><option value="">Beispiele…</option></select>
+  <input type="file" id="fileInput" accept=".txt,text/plain" hidden>
+  <span class="sep m-more"></span>
+  <button id="btnExport" class="m-more" title="Diagramm als .drawio.svg herunterladen – direkt in draw.io bearbeitbar">Export .drawio.svg</button>
+  <button id="btnPrint" class="m-more" title="Alle Ebenen auf A4 drucken (Strg+P)">Drucken A4</button>
+  <span class="sep m-more"></span>
+  <label class="m-more"><input type="checkbox" id="optNumbers"> Box-Nummern</label>
+  <label class="m-more"><input type="checkbox" id="optPunct"> „.“ und „:“ ausblenden</label>
   <span class="spacer"></span>
-  <span id="fileName" class="filename"></span>
-  <button id="btnHelp">Syntax-Hilfe</button>
+  <span id="fileName" class="filename m-more"></span>
+  <button id="btnHelp" class="m-more" title="Syntax-Hilfe" aria-label="Syntax-Hilfe"><span class="d-only">?</span><span class="m-txt">Syntax-Hilfe</span></button>
+  <button id="btnMenu" class="m-only" aria-expanded="false" aria-controls="toolbar" title="Weitere Funktionen">☰</button>
 </header>
 
 <main id="main">
@@ -42,7 +33,16 @@
   </section>
   <div id="splitter" title="Breite ändern"></div>
   <section id="diagramPane">
-    <nav id="layerTabs" hidden></nav>
+    <div class="pane-bar">
+      <nav id="layerTabs" hidden></nav>
+      <div class="zoom">
+        <button id="btnZoomOut" title="Verkleinern" aria-label="Verkleinern">−</button>
+        <button id="btn100" title="Originalgröße"><span id="zoomLabel">100 %</span></button>
+        <button id="btnZoomIn" title="Vergrößern" aria-label="Vergrößern">+</button>
+        <button id="btnFit" title="In Fenster einpassen">Einpassen</button>
+        <button id="btnFullscreen" title="Diagramm im Vollbild anzeigen"><span class="ico">⛶</span><span class="lbl">Vollbild</span></button>
+      </div>
+    </div>
     <div id="canvas"><div id="svgHost"></div></div>
   </section>
 </main>

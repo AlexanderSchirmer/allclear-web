@@ -30,6 +30,8 @@ python -m http.server 8765
 - Live-Editor mit Syntax-Hervorhebung, Zeilennummern, Tab/Umschalt+Tab-Einrückung und automatischer Einrückung nach `?`, `:`, `\`
 - Öffnen über Dateidialog oder Drag & Drop; UTF-8 und ANSI (Windows-1252) werden erkannt und beim Speichern beibehalten
 - Anzeige als SVG; Klick auf eine Box springt zur Zeile, der Cursor im Editor markiert die Box
+- Vollbild-Ansicht für das Diagramm, Zoom per Strg+Mausrad oder Zwei-Finger-Geste
+- Für Smartphones optimiert: kompakte Leiste mit Menü (☰), Editor und Diagramm untereinander
 - Export als `.drawio.svg`: ein normales SVG mit eingebettetem draw.io-Modell (alle Ebenen als Seiten), in draw.io voll bearbeitbar
 - Druck auf A4: jede Ebene auf eine Seite skaliert, Hoch-/Querformat automatisch, keine Vergrößerung kleiner Diagramme
 - Unterstützt: IF (`?`), CASE (`:`), Bäume (`\`), Assistenz (`&`), Stop (`!`), Linientexte `( )`, Textbereiche (`;`), Kommentare `{ }`,
