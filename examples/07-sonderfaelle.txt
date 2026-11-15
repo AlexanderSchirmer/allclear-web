@@ -1,0 +1,24 @@
+Sonderfälle der Syntax
+{Kommentare in geschweiften Klammern erscheinen nicht im Diagramm.}
+
+[HEAD]
+Wareneingang erfassen;
+Lager: Halle 3.
+Prüfprotokoll anlegen. {interner Hinweis}
+[DESCRIPTION=Vorlage QS-07 verwenden]
+Ist die Ware beschädigt?
+	(Ja)Reklamation an Lieferanten.
+	(Nein)Ware einlagern.
+Bestand im System buchen.
+
+[HEAD]
+[BYLINE]
+Mit BYLINE wird jede Zeile eine Box:
+Auch Zeilen mit Fragezeichen?
+Erzeugen keine Verzweigung.
+
+[TREE]
+Ablageordnung
+	Eingang.
+	Prüfung.
+	Archiv.

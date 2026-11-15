@@ -1,0 +1,32 @@
+Auftragsabwicklung
+{Jede [LAYER]-Direktive beginnt eine neue Ebene (Seite).
+ [LINKTO=Name:Ebene] springt zu [LINK=Name] auf der genannten Ebene.}
+
+[LAYER=1, Übersicht]
+[HEAD]
+Auftrag erfassen.
+Auftrag prüfen.
+[LINKTO=Pruefung:2]
+Ist der Auftrag gültig?
+	(Ja)Ware kommissionieren.
+	Ware versenden.
+	[LINKTO=Versand:3]
+	(Nein)!Kunden informieren.
+[LINK=Rechnung]
+Rechnung stellen.
+
+[LAYER=2, Auftragsprüfung]
+[HEAD]
+[LINK=Pruefung:1]
+Kundendaten prüfen.
+Bonität prüfen.
+Liefertermin bestätigen.
+
+[LAYER=3, Versand]
+[HEAD]
+[LINK=Versand:1]
+Lieferschein drucken.
+Paket packen.
+Paketdienst beauftragen.
+Sendungsnummer melden.
+[LINKTO=Rechnung:1]

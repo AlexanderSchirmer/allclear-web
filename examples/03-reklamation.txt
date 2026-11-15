@@ -1,0 +1,24 @@
+Reklamationsbearbeitung
+
+[HEAD]
+Reklamation geht ein.
+Über welchen Kanal kam die Reklamation:
+	(E-Mail)Ticket automatisch anlegen.
+	(Telefon)Gesprächsnotiz erfassen.
+	Ticket manuell anlegen.
+	(Brief)Schreiben scannen.
+	Ticket manuell anlegen.
+[LABEL=analyse]
+Ursache analysieren.
+Ist der Fehler reproduzierbar?
+	(Ja)Korrektur durchführen.
+	[LOOP]
+	Test erfolgreich?
+		(Nein)Korrektur nachbessern.
+		Erneut testen.
+	[UNTIL]
+	(Ja)Korrektur freigeben.
+	(Nein)Weitere Informationen beim Kunden anfordern.
+	[GOTO=analyse, Infos liegen vor]
+Kunden informieren.
+!Ticket schließen.

@@ -1,0 +1,141 @@
+:root {
+  --bg: #f3f4f6;
+  --panel: #ffffff;
+  --border: #d0d4da;
+  --text: #1f2328;
+  --muted: #5f6670;
+  --accent: #1a73e8;
+  --editor-w: 38%;
+  --ed-font: 13px;
+  --ed-lh: 20px;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  display: flex; flex-direction: column; overflow: hidden;
+  font: 13px/1.4 "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+  color: var(--text); background: var(--bg);
+}
+body.resizing { cursor: col-resize; user-select: none; }
+
+/* Werkzeugleiste */
+.toolbar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px;
+  padding: 6px 10px; background: var(--panel); border-bottom: 1px solid var(--border);
+}
+.brand { font-weight: 700; font-size: 15px; margin-right: 4px; }
+.group { display: flex; align-items: center; gap: 4px; }
+.group.opts { gap: 10px; }
+.spacer { flex: 1; }
+.filename { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 260px; }
+button, select {
+  font: inherit; color: var(--text); background: #fff; border: 1px solid var(--border);
+  border-radius: 5px; padding: 4px 10px; cursor: pointer; min-height: 28px;
+}
+button:hover, select:hover { border-color: #9aa1aa; background: #f8f9fa; }
+button.active { background: #e8f0fe; border-color: var(--accent); color: #174ea6; }
+label { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; white-space: nowrap; }
+#zoomLabel { display: inline-block; min-width: 3.4em; text-align: center; }
+
+/* Hauptbereich */
+main {
+  flex: 1; min-height: 0; display: grid;
+  grid-template-columns: var(--editor-w) 6px 1fr;
+}
+#editorPane { display: flex; flex-direction: column; min-width: 0; min-height: 0; background: var(--panel); }
+#splitter { cursor: col-resize; background: var(--border); }
+#splitter:hover { background: #aab1bb; }
+#diagramPane { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+
+/* Editor */
+.editor { flex: 1; min-height: 0; display: flex; position: relative; }
+.ed-gutter {
+  width: 44px; flex: none; overflow: hidden; background: #f6f7f9; border-right: 1px solid #e3e6ea;
+  color: #9aa1aa; font: var(--ed-font)/var(--ed-lh) Consolas, "Cascadia Mono", "Courier New", monospace;
+  text-align: right; padding: 6px 6px 6px 0; user-select: none;
+}
+.ed-gutter-inner > div { height: var(--ed-lh); }
+.ed-code { position: relative; flex: 1; min-width: 0; }
+.ed-hl, .ed-ta {
+  position: absolute; inset: 0; margin: 0; padding: 6px 10px; border: 0;
+  font: var(--ed-font)/var(--ed-lh) Consolas, "Cascadia Mono", "Courier New", monospace;
+  tab-size: 4; -moz-tab-size: 4; white-space: pre; overflow-wrap: normal; word-break: normal; letter-spacing: 0;
+}
+.ed-hl { overflow: hidden; pointer-events: none; color: var(--text); }
+.ed-hl .ln { height: var(--ed-lh); min-width: max-content; }
+.ed-hl .ln.err { background: #fff1c2; }
+.ed-ta {
+  overflow: auto; resize: none; outline: none; background: transparent;
+  color: transparent; caret-color: #000; -webkit-text-fill-color: transparent;
+}
+.ed-ta::selection { background: rgba(26, 115, 232, 0.28); }
+.t-t { font-weight: 700; }
+.t-d { color: #0b5cad; font-weight: 600; }
+.t-c { color: #8a8f98; font-style: italic; }
+.t-m { color: #b3261e; font-weight: 700; }
+.t-l { color: #137333; }
+
+/* Hinweise */
+#problems {
+  max-height: 28%; overflow: auto; border-top: 1px solid var(--border); background: #fffbea; flex: none;
+}
+#problems .ph { position: sticky; top: 0; background: #fff4c4; padding: 3px 10px; font-weight: 600; }
+#problems .pi { padding: 2px 10px; cursor: pointer; }
+#problems .pi:hover { background: #fff0b0; }
+
+/* Diagramm */
+#layerTabs { display: flex; gap: 4px; padding: 6px 10px 0; flex-wrap: wrap; }
+#layerTabs[hidden] { display: none; }
+#layerTabs button { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+#canvas { flex: 1; min-height: 0; overflow: auto; padding: 16px; }
+#svgHost { display: inline-block; min-width: 100%; text-align: center; }
+#svgHost svg { display: inline-block; background: #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, .18); }
+#svgHost .ac-box { cursor: pointer; }
+#svgHost .ac-box:hover > :first-child { stroke: var(--accent); }
+#svgHost .ac-box.sel > :first-child { stroke: var(--accent); stroke-width: 2.5; }
+#svgHost .ac-link-active { cursor: pointer; }
+#svgHost .ac-link-active:hover circle { fill: #e8f0fe; }
+.empty { color: var(--muted); padding: 40px 20px; font-size: 14px; }
+
+/* Drag & Drop */
+#dropOverlay {
+  position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 50;
+  background: rgba(26, 115, 232, .12); border: 4px dashed var(--accent); pointer-events: none;
+}
+#dropOverlay.show { display: flex; }
+#dropOverlay div { background: #fff; padding: 18px 28px; border-radius: 8px; font-size: 18px; box-shadow: 0 2px 12px rgba(0, 0, 0, .2); }
+
+/* Hilfe */
+dialog { border: 1px solid var(--border); border-radius: 8px; padding: 0; max-width: min(860px, 94vw); max-height: 90vh; }
+dialog::backdrop { background: rgba(0, 0, 0, .3); }
+.help { padding: 16px 22px; overflow: auto; max-height: 90vh; }
+.help h2 { margin-top: 0; font-size: 18px; }
+.help h3 { font-size: 14px; margin: 16px 0 6px; }
+.help table { border-collapse: collapse; width: 100%; }
+.help th, .help td { border: 1px solid #e1e4e8; padding: 4px 8px; text-align: left; vertical-align: top; }
+.help th { background: #f6f7f9; }
+.help code { background: #f1f3f4; padding: 0 3px; border-radius: 3px; }
+.help .actions { text-align: right; margin-top: 12px; }
+
+/* Schmale Bildschirme */
+@media (max-width: 800px) {
+  body { overflow: auto; height: auto; }
+  main { grid-template-columns: 1fr; grid-template-rows: 45vh 0 auto; }
+  #splitter { display: none; }
+  #canvas { min-height: 60vh; }
+}
+
+/* Druck */
+#printArea { display: none; }
+@page { size: A4 portrait; margin: 10mm; }
+@page quer { size: A4 landscape; margin: 10mm; }
+@media print {
+  html, body { height: auto; overflow: visible; background: #fff; display: block; }
+  body > *:not(#printArea) { display: none !important; }
+  #printArea { display: block; }
+  .print-page { page: hoch; break-after: page; text-align: center; }
+  .print-page.quer { page: quer; }
+  .print-page:last-child { break-after: auto; }
+  .print-page svg { display: inline-block; }
+}
+@page hoch { size: A4 portrait; margin: 10mm; }

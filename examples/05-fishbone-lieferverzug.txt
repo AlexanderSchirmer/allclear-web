@@ -1,0 +1,22 @@
+Warum kommt die Lieferung zu spät?
+
+[FISHBONE]
+Lieferung verspätet\
+	Versand.
+		Spediteur überlastet.
+		Verpackung.
+			Material fehlt.
+	Produktion.
+		Maschinenausfall.
+		Schichtplanung.
+	Personal.
+		Krankheitsfälle.
+		Einarbeitung.
+	Material.
+		Lieferant unzuverlässig.
+		Qualitätsprüfung.
+	Planung.
+		Falsche Prognose.
+	Kommunikation.
+		Rückfragen.
+		Auftragsänderungen.

@@ -1,0 +1,25 @@
+Jahrestreffen organisieren
+
+[HEAD]
+Termin für das Treffen festlegen.
+Teilnehmerliste erstellen.
+Findet das Treffen im Haus statt?
+	(Ja)Besprechungsraum reservieren.
+	(Nein)Externen Veranstaltungsort mieten.
+Einladungen versenden.
+Unterlagen für die Teilnehmer zusammenstellen:
+	()Block und Stifte.
+	Werbeartikel mit Firmenlogo bestellen.
+	()Jahresbericht.
+	Rechtzeitige Lieferung sicherstellen.
+	()Gastgeschenk.
+	Geschenke auswählen und bestellen.
+	()Vertriebsbroschüren.
+	Ausreichend Exemplare beim Vertrieb anfordern.
+[LOOP]
+Haben alle Gäste geantwortet?
+	(Nein)Fehlende Gäste anrufen.
+	Teilnehmerzahl erfragen.
+[UNTIL]
+(Ja)Verpflegung bestellen.
+!Treffen genießen.

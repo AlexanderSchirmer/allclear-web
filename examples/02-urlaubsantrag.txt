@@ -1,0 +1,19 @@
+Urlaubsantrag bearbeiten
+[GOTOLOGIC]
+{GOTO-Linien haben Vorrang: Boxen mit GOTO erhalten keine automatische Linie}
+
+[HEAD]
+Antrag im Portal einreichen.
+[DESCRIPTION=Formular U-12, spätestens 4 Wochen vorher]
+[LABEL=pruefen]
+Teamleitung prüft den Antrag.
+Sind noch Resturlaubstage vorhanden?
+	(Ja)Ist die Vertretung geklärt?
+		(Ja)Antrag genehmigen.
+		(Nein)Rückfrage an Mitarbeiter.
+		[GOTO=pruefen, erneut prüfen]
+	(Nein)!Antrag ablehnen.
+Personalabteilung informieren.
+[LINETEXT=automatisch]
+Urlaub im Kalender eintragen.
+!Ende.

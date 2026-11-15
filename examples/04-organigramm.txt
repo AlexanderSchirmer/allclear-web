@@ -1,0 +1,17 @@
+Musterfirma GmbH
+
+[HEAD]
+Dr. Anna Berger, Geschäftsführung\
+	&Tom Krüger, Assistenz.
+	Jonas Weber, Leitung Vertrieb.
+		Lena Fischer, Innendienst.
+		Max Schulz, Außendienst Nord.
+		Paul Wagner, Außendienst Süd.
+	Sabine Hoffmann, Leitung Technik.
+		Entwicklung\
+			Mia Becker, Software.
+			Noah Wolf, Hardware.
+		Kai Richter, Support.
+	Petra Klein, Leitung Finanzen.
+		Lukas Braun, Buchhaltung.
+		Emma Zimmermann, Controlling.

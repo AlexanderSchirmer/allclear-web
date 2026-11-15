@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>allClear Web</title>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<header class="toolbar">
+  <span class="brand">allClear&nbsp;Web</span>
+  <div class="group">
+    <button id="btnNew" title="Neues Diagramm">Neu</button>
+    <button id="btnOpen" title="Textdatei öffnen (Strg+O)">Öffnen…</button>
+    <button id="btnSave" title="Als Textdatei speichern (Strg+S)">Speichern</button>
+    <select id="selExample" title="Beispiel laden"><option value="">Beispiele…</option></select>
+    <input type="file" id="fileInput" accept=".txt,text/plain" hidden>
+  </div>
+  <div class="group">
+    <button id="btnExport" title="Diagramm als .drawio.svg herunterladen – direkt in draw.io bearbeitbar">Export .drawio.svg</button>
+    <button id="btnPrint" title="Alle Ebenen auf A4 drucken (Strg+P)">Drucken A4</button>
+  </div>
+  <div class="group">
+    <button id="btnZoomOut" title="Verkleinern">−</button>
+    <button id="btn100" title="Originalgröße"><span id="zoomLabel">100 %</span></button>
+    <button id="btnZoomIn" title="Vergrößern">+</button>
+    <button id="btnFit" title="In Fenster einpassen">Einpassen</button>
+  </div>
+  <div class="group opts">
+    <label><input type="checkbox" id="optNumbers"> Box-Nummern</label>
+    <label><input type="checkbox" id="optPunct"> „.“ und „:“ ausblenden</label>
+  </div>
+  <span class="spacer"></span>
+  <span id="fileName" class="filename"></span>
+  <button id="btnHelp">Syntax-Hilfe</button>
+</header>
+
+<main id="main">
+  <section id="editorPane">
+    <div id="editor" class="editor"></div>
+    <div id="problems" hidden></div>
+  </section>
+  <div id="splitter" title="Breite ändern"></div>
+  <section id="diagramPane">
+    <nav id="layerTabs" hidden></nav>
+    <div id="canvas"><div id="svgHost"></div></div>
+  </section>
+</main>
+
+<div id="dropOverlay"><div>Textdatei hier ablegen</div></div>
+<div id="printArea"></div>
+
+<dialog id="helpDialog">
+  <form method="dialog" class="help">
+    <h2>allCLEAR-Syntax – Kurzreferenz</h2>
+    <p>Erste Zeile(n): <b>Titel</b>. Danach eine Leerzeile oder eine Direktive. Jede weitere Zeile ist eine Box.
+      Die <b>Einrückung mit Tab</b> bestimmt die Struktur (Tab / Umschalt+Tab rücken ein bzw. aus).</p>
+    <h3>Satzzeichen</h3>
+    <table>
+      <tr><th>Zeichen</th><th>Position</th><th>Wirkung</th></tr>
+      <tr><td><code>?</code></td><td>Zeilenende</td><td>Entscheidung (IF) – eingerückt folgen <code>(Ja)…</code> und <code>(Nein)…</code></td></tr>
+      <tr><td><code>:</code></td><td>Zeilenende</td><td>Auswahl (CASE) – eingerückt folgen Wahl-Boxen <code>()…</code></td></tr>
+      <tr><td><code>\</code></td><td>Zeilenende</td><td>Baum – tiefer eingerückte Zeilen sind Kinder</td></tr>
+      <tr><td><code>;</code></td><td>Zeilenende</td><td>Nächste Zeile kommt in den nächsten Textbereich derselben Box</td></tr>
+      <tr><td><code>( )</code></td><td>Zeilenanfang</td><td>Wahl-Box; Text in Klammern ist der Linientext</td></tr>
+      <tr><td><code>!</code></td><td>Zeilenanfang</td><td>Stop-Box (keine abgehende Linie)</td></tr>
+      <tr><td><code>&amp;</code></td><td>Zeilenanfang</td><td>Assistenz im Organigramm</td></tr>
+      <tr><td><code>{…}</code></td><td>beliebig</td><td>Kommentar, erscheint nicht im Diagramm</td></tr>
+    </table>
+    <p>Zweige werden zusammengeführt, indem die nächste Zeile wieder auf der Ebene der Frage steht.
+      Zeilen ohne Klammern unter einer Wahl-Box sind Folgeschritte in diesem Zweig.</p>
+    <h3>Direktiven</h3>
+    <table>
+      <tr><th>Direktive</th><th>Position</th><th>Wirkung</th></tr>
+      <tr><td><code>[HEAD]</code></td><td>vor der Startbox</td><td>Neuer Ablauf (mehrere stehen nebeneinander)</td></tr>
+      <tr><td><code>[FLOW]</code> / <code>[TREE]</code></td><td>vor der Startbox</td><td>Erzwingt Ablauf- bzw. Baumdarstellung</td></tr>
+      <tr><td><code>[FISHBONE]</code></td><td>vor der Wirkung</td><td>Ursache-Wirkung-Diagramm; erste Box endet mit <code>\</code></td></tr>
+      <tr><td><code>[LOOP]</code> … <code>[UNTIL]</code></td><td>vor dem Schleifenkopf / danach</td><td>Schleife mit Rücksprung zum Kopf</td></tr>
+      <tr><td><code>[GOTO=Ziel, Text; Ziel2, Text2]</code></td><td>nach der Box</td><td>Sprunglinie(n) mit Linientext</td></tr>
+      <tr><td><code>[LABEL=Ziel]</code></td><td>vor der Box</td><td>Sprungziel</td></tr>
+      <tr><td><code>[GOTOLOGIC]</code></td><td>nach dem Titel</td><td>Boxen mit GOTO erhalten keine automatische Linie</td></tr>
+      <tr><td><code>[LINKTO=Name:Ebene]</code></td><td>nach der Box</td><td>Sprungsymbol zu <code>[LINK=Name]</code> (anklickbar)</td></tr>
+      <tr><td><code>[LINK=Name]</code></td><td>vor der Box</td><td>Ziel eines Links; <code>[LINK=Name:Ebene]</code> springt zurück</td></tr>
+      <tr><td><code>[LAYER=Nr, Name]</code></td><td>beliebig</td><td>Neue Ebene (eigene Seite) – Erweiterung von allClear Web</td></tr>
+      <tr><td><code>[DESCRIPTION=Text]</code></td><td>nach der Box</td><td>Beschreibung neben der Box mit Pfeil</td></tr>
+      <tr><td><code>[LINETEXT=Text]</code></td><td>vor der Box</td><td>Text auf der eingehenden Linie</td></tr>
+      <tr><td><code>[BYLINE]</code></td><td>vor den Zeilen</td><td>Jede Zeile wird eine einfache Box (Satzzeichen ohne Wirkung)</td></tr>
+      <tr><td><code>[SHAPE]</code>, <code>[COLOR]</code>, <code>[BEGIN]</code>, <code>[END]</code></td><td></td><td>Werden akzeptiert, haben in Schwarz-Weiß keine Wirkung</td></tr>
+    </table>
+    <h3>Bedienung</h3>
+    <ul>
+      <li>Dateien per Drag &amp; Drop auf das Fenster ziehen oder über „Öffnen…“ laden (UTF-8 und ANSI werden erkannt).</li>
+      <li>Klick auf eine Box springt zur Zeile im Editor; der Cursor im Editor markiert die Box im Diagramm.</li>
+      <li>Strg + Mausrad zoomt das Diagramm.</li>
+      <li>„Export .drawio.svg“ erzeugt ein SVG, das draw.io direkt als bearbeitbares Diagramm öffnet.</li>
+    </ul>
+    <div class="actions"><button value="close">Schließen</button></div>
+  </form>
+</dialog>
+
+<script src="js/parser.js"></script>
+<script src="js/layout.js"></script>
+<script src="js/render.js"></script>
+<script src="js/editor.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
